@@ -1,6 +1,13 @@
 <template>
-  <div class="resizable">
-    <Resizer v-for="resizer in activeResizers" :key="resizer" :type="resizer" :onResize="onResize" />
+  <div class="resizable" :style="resizableStyle">
+    <Resizer
+      v-for="resizer in resizers"
+      :key="resizer"
+      :debug="debug"
+      :type="resizer"
+      :size="size"
+      @resizing="resizing"
+    />
   </div>
 </template>
 
@@ -15,43 +22,31 @@ export default {
   },
   props: {
     resizers: {
-      type: Object,
+      type: Array,
       default: function() {
-        return RESIZER_TYPES.reduce((acc, curr) => {
-          acc[curr] = true;
-          return acc;
-        }, {});
+        return RESIZER_TYPES;
       },
       validator: function(resizers) {
-        for (const resizer in resizers) {
-          if (RESIZER_TYPES.indexOf(resizer) === -1) {
-            return false;
-          }
-        }
-        return true;
-      }
+        return resizers.every(resizer => RESIZER_TYPES.indexOf(resizer) !== -1);
+      },
+      required: false
     },
-    onResize: {
-      type: Function,
-      required: true
-    }
+    size: {
+      type: Number,
+      default: 10
+    },
+    debug: Boolean
   },
   computed: {
-    activeResizers() {
-      const result = [];
-
-      for (const resizer in this.resizers) {
-        if (this.resizers[resizer]) {
-          result.push(resizer);
-        }
-      }
-
-      return result;
+    resizableStyle() {
+      return {
+        margin: `${-this.size / 2}px`
+      };
     }
   },
   methods: {
-    handleResize(xDir, yDir) {
-      console.log(xDir, yDir);
+    resizing(info) {
+      this.$emit("resizing", info);
     }
   }
 };
@@ -60,9 +55,9 @@ export default {
 <style>
 .resizable {
   position: absolute;
-  width: 100%;
-  height: 100%;
   left: 0;
   top: 0;
+  bottom: 0;
+  right: 0;
 }
 </style>

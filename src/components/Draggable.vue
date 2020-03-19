@@ -1,79 +1,112 @@
 <template>
-  <ul class="draggable-area">
-    <DraggableItem
-      v-for="({width, height, x, y, isActive, id}) in elements"
-      :key="id"
-      :id="id"
-      :width="width"
-      :height="height"
-      :x="x"
-      :y="y"
-      :isActive="isActive"
-      @onActive="onActive"
-      @onResize="onResize"
-      @onDrag="onDrag"
-    >text</DraggableItem>
-  </ul>
+  <div
+    class="draggable"
+    :class="{ 'draggable_is-dragging': isDragging, draggable_debug: debug }"
+    :style="isDragging && draggingStyle"
+    @mousemove.prevent="drag"
+    @mouseup="endDrag"
+    @mouseleave="endDrag"
+  >
+    <div class="draggable__dragger" @mousedown.prevent="startDrag">
+      <slot></slot>
+    </div>
+  </div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import { SET_SIZE, SET_POSITION, SET_ACTIVE } from "../store/mutations-type";
-import DraggableItem from "./DraggableItem";
-
 export default {
   name: "Draggable",
-  components: {
-    DraggableItem
-  },
   props: {
-    data: Array,
-    default: []
+    outer: {
+      type: Number,
+      default: 200
+    },
+    debug: Boolean
   },
-  computed: {},
-  mounted: function() {
-    this.elements = this.getElements();
+  computed: {
+    draggingStyle() {
+      return {
+        padding: `${this.outer}px`,
+        left: `${-this.outer}px`,
+        top: `${-this.outer}px`
+      };
+    }
   },
   methods: {
-    ...mapGetters(["getElements"]),
-    onActive(id, isActive) {
-      this.$store.commit({
-        type: SET_ACTIVE,
-        id,
-        isActive
-      });
+    startDrag(e) {
+      if (
+        e.target.classList.contains("draggable__dragger") ||
+        e.target.closest(".draggable__dragger")
+      ) {
+        this.isDragging = true;
+        this.initialX = e.clientX;
+        this.initialY = e.clientY;
+
+        this.$emit("dragging", { stage: "start" });
+      }
     },
-    onResize(id, width, height) {
-      this.$store.commit({
-        type: SET_SIZE,
-        id,
-        width,
-        height
-      });
+    drag(e) {
+      if (this.isDragging) {
+        const xDir = e.clientX - this.initialX;
+        const yDir = e.clientY - this.initialY;
+
+        this.$emit("dragging", {
+          xDir,
+          yDir,
+          stage: "dragging"
+        });
+
+        this.initialX = e.clientX;
+        this.initialY = e.clientY;
+      }
     },
-    onDrag(id, x, y) {
-      this.$store.commit({
-        type: SET_POSITION,
-        id,
-        x,
-        y
-      });
+    endDrag() {
+      this.isDragging = false;
+
+      this.$emit("dragging", { stage: "end" });
     }
   },
   data: function() {
     return {
-      elements: []
+      initialX: 0,
+      initialY: 0,
+      isDragging: false
     };
   }
 };
 </script>
 
 <style>
-.draggable-area {
-  position: relative;
+.draggable {
+  position: absolute;
+  box-sizing: content-box;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  list-style: none;
+}
+
+.draggable_is-dragging {
+  z-index: 30;
+}
+
+.draggable_debug {
+  background-color: rgba(0, 255, 26, 0.4);
+}
+
+.draggable_debug .draggable__dragger {
+  border: 1px solid #000;
+  background-color: rgba(255, 0, 0, 1);
+}
+
+.draggable_is-dragging .draggable__dragger {
+  cursor: move;
+}
+
+.draggable__dragger {
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  position: relative;
 }
 </style>

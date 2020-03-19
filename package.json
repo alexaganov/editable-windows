@@ -36,7 +36,8 @@
     "rules": {
       "no-unused-vars": "warn",
       "no-console": "warn",
-      "vue/no-unused-components": "warn"
+      "vue/no-unused-components": "warn",
+      "no-empty": "warn"
     }
   },
   "browserslist": [

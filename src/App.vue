@@ -7,12 +7,12 @@
 
 <script>
 import Content from "./components/Content";
-// import Sidebar from "./components/Sidebar";
+import Sidebar from "./components/Sidebar";
 
 export default {
   name: "App",
   components: {
-    // Sidebar,
+    Sidebar,
     Content
   },
   mounted: function() {}

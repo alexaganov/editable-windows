@@ -7,71 +7,77 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
   state: {
     history: [],
-    elements: [
+
+    windows: [
       {
         id: 1,
-        width: 200,
-        height: 200,
-        x: 0,
-        y: 0,
+        name: 'Window 1',
+        w: 200,
+        h: 200,
+        x: 30,
+        y: 30,
         isActive: false,
-        content: []
+        content: 'window 1'
       },
       {
         id: 2,
-        width: 200,
-        height: 200,
-        x: 0,
-        y: 0,
+        name: 'Window 2',
+        w: 200,
+        h: 200,
+        x: 30,
+        y: 30,
         isActive: false,
-        content: []
-      }
+        content: 'window 2'
+      },
     ],
   },
   getters: {
-    getElements(state) {
-      return state.elements;
+    getWindows(state) {
+      return state.windows;
     }
   },
   mutations: {
     [SET_SIZE](state, payload) {
-      state.elements.forEach(item => {
-        if (item.id === payload.id) {
-          if (typeof payload.width === 'number') {
-            item.width = payload.width;
-          } 
-
-          if (typeof payload.height === 'number') {
-            item.height = payload.height;
+      state.windows.forEach(window => {
+        if (window.id === payload.id) {
+          if (typeof payload.w === 'number') {
+            window.w = payload.w;
+          }
+          
+          if (typeof payload.h === 'number') {
+            window.h = payload.h;
           }
         }
+
+
       });
     },
 
     [SET_POSITION](state, payload) {
-      state.elements.forEach(item => {
-        if (item.id === payload.id) {
-          if (typeof payload.x === 'number') {
-            item.x = payload.x;
-          } 
+      const currentWindow = state.windows.find(window => window.id === payload.id);
 
-          if (typeof payload.y === 'number') {
-            item.y = payload.y;
-          }
+      if (currentWindow) {
+        if (typeof payload.x === 'number') {
+          currentWindow.x = payload.x;
+        } 
+
+        if (typeof payload.y === 'number') {
+          currentWindow.y = payload.y;
         }
-      });
+      }
     },
 
     [SET_ACTIVE](state, payload) {
-      state.elements.forEach(item => {
-        if (item.isActive && item.id !== payload.id) {
-          item.isActive = false;
-        }
+      const currentWindow = state.windows.find(window => window.id === payload.id);
+      const activeWindow =  state.windows.find(window => window.isActive);
 
-        if (!item.isActive && item.id === payload.id) {
-          item.isActive = true;
-        }
-      });
+      if (activeWindow) {
+        activeWindow.isActive = false;
+      }
+
+      if (currentWindow) {
+        currentWindow.isActive = true;
+      }
     },
 
   }
