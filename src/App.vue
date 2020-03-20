@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <!-- <Sidebar /> -->
+    <Sidebar />
     <Content />
   </div>
 </template>
@@ -19,13 +19,18 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
+@import "~@/scss/variables";
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #000;
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
   display: flex;
+  background-color: $color-secondary;
+  overflow: hidden;
 }
 </style>

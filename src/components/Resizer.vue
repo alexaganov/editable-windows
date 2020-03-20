@@ -5,8 +5,7 @@
     @mouseleave="endResize"
     :class="[
       'resizer',
-      { 'resizer_is-resizing': isResizing, 
-      resizer_debug: debug },
+      { 'resizer_is-resizing': isResizing, resizer_debug: debug },
       `resizer_${type}`
     ]"
     :style="resizerResizingStyle"
@@ -128,12 +127,12 @@ export default {
         this.initialX = e.clientX;
         this.initialY = e.clientY;
 
-        this.$emit("resizing", { stage: "start" });
+        this.$emit("start-resizing");
       }
     },
     endResize() {
       this.isResizing = false;
-      this.$emit("resizing", { stage: "end" });
+      this.$emit("end-resizing");
     },
     resize(e) {
       if (this.isResizing) {
@@ -178,12 +177,7 @@ export default {
             break;
         }
 
-        this.$emit("resizing", {
-          xDir,
-          yDir,
-          resizer: this.type,
-          stage: "resizing"
-        });
+        this.$emit("resizing", { xDir, yDir, resizer: this.type });
 
         this.initialX = e.clientX;
         this.initialY = e.clientY;
@@ -204,6 +198,7 @@ export default {
 .resizer {
   position: absolute;
   box-sizing: content-box;
+  pointer-events: all;
 }
 
 .resizer_debug {
@@ -217,17 +212,11 @@ export default {
 
 .resizer_top,
 .resizer_bottom {
-  /* left: 0;
-  right: 0;
-  margin: auto; */
   width: 100%;
 }
 
 .resizer_left,
 .resizer_right {
-  /* top: 0;
-  bottom: 0;
-  margin: auto; */
   height: 100%;
 }
 

@@ -15,9 +15,10 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
 .content {
   flex: 1 1 100%;
   position: relative;
+  z-index: 10;
 }
 </style>

@@ -7,10 +7,15 @@
       'editable-window_is-active': isActive
     }"
     :style="editableWindowStyle"
+    :title="name"
   >
     <div class="editable-window__controls">
       <Draggable @dragging="dragging" />
-      <Resizable @resizing="resizing" debug />
+      <Resizable
+        @start-resizing="onStartResizing"
+        @resizing="onResizing"
+        @end-resizing="onEndResizing"
+      />
     </div>
     <div class="editable-window__content">
       <div class="editable-window__header"></div>
@@ -44,7 +49,7 @@ export default {
     y: { type: Number, default: 0 },
     w: { type: Number, default: 200 },
     h: { type: Number, default: 200 },
-    title: String,
+    name: String,
     id: Number,
     resizers: Array,
     content: String,
@@ -73,19 +78,13 @@ export default {
   },
   watch: {
     yMax(newYMax) {
-      if (!(this.y <= this.yMin && this.y >= newYMax)) {
-        if (this.y <= this.yMin) {
-          this.setPosition({ y: this.yMin });
-        } else if (this.y >= newYMax) {
-          this.setPosition({ y: newYMax });
-        }
+      if (this.y >= newYMax) {
+        this.setPosition({ y: newYMax });
       }
     },
     xMax(newXMax) {
-      if (this.x > newXMax) {
+      if (this.x >= newXMax) {
         this.setPosition({ x: newXMax });
-      } else if (this.x < this.xMin) {
-        this.setPosition({ x: this.xMin });
       }
     }
   },
@@ -104,7 +103,8 @@ export default {
     },
     isDraggable(x, y) {
       return (
-        x >= this.xMin && x <= this.xMax && y >= this.yMin && y <= this.yMax
+        !this.walls ||
+        (x >= this.xMin && x <= this.xMax && y >= this.yMin && y <= this.yMax)
       );
     },
     dragging(info) {
@@ -133,130 +133,120 @@ export default {
         }
       }
     },
-    resizing(info) {
-      switch (info.stage) {
-        case "start": {
-          this.initialX = this.x;
-          this.initialY = this.y;
-          this.isResizing = true;
+    onStartResizing() {
+      this.initialX = this.x;
+      this.initialY = this.y;
+      this.isResizing = true;
 
-          this.handleActivation({ id: this.id });
+      this.handleActivation({ id: this.id });
+    },
+    onEndResizing() {
+      this.isResizing = false;
+    },
+    onResizing(info) {
+      const { xDir, yDir, resizer } = info;
+      let w = this.w + xDir;
+      let h = this.h + yDir;
+
+      switch (resizer) {
+        case RESIZER_TOP_LEFT: {
+          const x = this.x - xDir;
+          const y = this.y - yDir;
+
+          if (
+            y >= this.yMin &&
+            x >= this.xMin &&
+            h >= this.hMin &&
+            w >= this.wMin
+          ) {
+            this.setSize({ w, h });
+            this.setPosition({ y, x });
+          }
 
           break;
         }
-        case "end": {
-          this.isResizing = false;
+
+        case RESIZER_TOP_RIGHT: {
+          const x = this.x + xDir;
+          const y = this.y - yDir;
+
+          if (
+            y >= this.yMin &&
+            x <= this.xMax &&
+            h >= this.hMin &&
+            w >= this.wMin
+          ) {
+            this.setSize({ w, h });
+            this.setPosition({ y });
+          }
 
           break;
         }
-        case "resizing": {
-          const { xDir, yDir, resizer } = info;
-          let w = this.w + xDir;
-          let h = this.h + yDir;
 
-          switch (resizer) {
-            case RESIZER_TOP_LEFT: {
-              const x = this.x - xDir;
-              const y = this.y - yDir;
+        case RESIZER_BOTTOM_LEFT: {
+          const x = this.x - xDir;
+          const y = this.y - yDir;
 
-              if (
-                y >= this.yMin &&
-                x >= this.xMin &&
-                h >= this.hMin &&
-                w >= this.wMin
-              ) {
-                this.setSize({ w, h });
-                this.setPosition({ y, x });
-              }
+          if (
+            x >= this.xMin &&
+            y <= this.yMax &&
+            w >= this.wMin &&
+            h >= this.hMin
+          ) {
+            this.setSize({ w, h });
+            this.setPosition({ x });
+          }
 
-              break;
-            }
+          break;
+        }
 
-            case RESIZER_TOP_RIGHT: {
-              const x = this.x + xDir;
-              const y = this.y - yDir;
+        case RESIZER_BOTTOM_RIGHT: {
+          const x = this.x + xDir;
+          const y = this.y + yDir;
 
-              if (
-                y >= this.yMin &&
-                x <= this.xMax &&
-                h >= this.hMin &&
-                w >= this.wMin
-              ) {
-                this.setSize({ w, h });
-                this.setPosition({ y });
-              }
+          if (
+            y <= this.yMax &&
+            x <= this.xMax &&
+            h >= this.hMin &&
+            w >= this.wMin
+          ) {
+            this.setSize({ w, h });
+          }
 
-              break;
-            }
+          break;
+        }
+        case RESIZER_TOP: {
+          const y = this.y - yDir;
 
-            case RESIZER_BOTTOM_LEFT: {
-              const x = this.x - xDir;
-              const y = this.y - yDir;
+          if (y > this.yMin && h > this.hMin) {
+            this.setSize({ h });
+            this.setPosition({ y });
+          }
 
-              if (
-                x >= this.xMin &&
-                y <= this.yMax &&
-                w >= this.wMin &&
-                h >= this.hMin
-              ) {
-                this.setSize({ w, h });
-                this.setPosition({ x });
-              }
+          break;
+        }
+        case RESIZER_BOTTOM: {
+          const y = this.y + yDir;
 
-              break;
-            }
+          if (y <= this.yMax && h >= this.hMin) {
+            this.setSize({ h });
+          }
+          break;
+        }
+        case RESIZER_LEFT: {
+          const x = this.x - xDir;
 
-            case RESIZER_BOTTOM_RIGHT: {
-              const x = this.x + xDir;
-              const y = this.y + yDir;
+          if (x >= this.xMin && w >= this.wMin && x <= this.xMax) {
+            this.setSize({ w });
+            this.setPosition({ x });
+          }
+          break;
+        }
+        case RESIZER_RIGHT: {
+          const x = this.x + xDir;
 
-              if (
-                y <= this.yMax &&
-                x <= this.xMax &&
-                h >= this.hMin &&
-                w >= this.wMin
-              ) {
-                this.setSize({ w, h });
-              }
-
-              break;
-            }
-            case RESIZER_TOP: {
-              const y = this.y - yDir;
-
-              if (y > this.yMin && h > this.hMin) {
-                this.setSize({ h });
-                this.setPosition({ y });
-              }
-
-              break;
-            }
-            case RESIZER_BOTTOM: {
-              const y = this.y + yDir;
-
-              if (y <= this.yMax && h >= this.hMin) {
-                this.setSize({ h });
-              }
-              break;
-            }
-            case RESIZER_LEFT: {
-              const x = this.x - xDir;
-
-              if (x >= this.xMin && w >= this.wMin && x <= this.xMax) {
-                this.setSize({ w });
-                this.setPosition({ x });
-              }
-              break;
-            }
-            case RESIZER_RIGHT: {
-              const x = this.x + xDir;
-
-              if (x <= this.xMax && w >= this.wMin) {
-                this.setSize({ w });
-              }
-
-              break;
-            }
+          if (x <= this.xMax && w >= this.wMin) {
+            this.setSize({ w });
           }
 
           break;
@@ -276,37 +266,43 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
+@import "~@/scss/variables";
+
 .editable-window {
   position: absolute;
   display: inline-block;
-  border: 1px solid rgb(172, 172, 172);
-  border-radius: 5px;
+  border: 1px solid $color-primary-dark;
+  border-radius: 2px;
   transition: box-shadow 0.2s;
-  background-color: #fff;
-}
+  background-color: $color-secondary-dark;
+  color: $text-color-primary-dark;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 
-.editable-window_is-active {
-  z-index: 100;
-  border: 1px solid rgb(47, 47, 47);
-}
+  &_is-active {
+    z-index: 100;
+    border: 1px solid $text-color-primary;
+    color: $text-color-primary;
+    // box-shadow: inset 0 0 0 5px transparentize($color-primary, 0.7);
+  }
 
-.editable-window_is-dragging {
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-}
+  &_is-dragging {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+  }
 
-.editable-window__controls {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-}
+  &__controls {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+  }
 
-.editable-window__content {
-  user-select: none;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
+  &__content {
+    user-select: none;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+  }
 }
 </style>

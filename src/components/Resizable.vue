@@ -6,7 +6,9 @@
       :debug="debug"
       :type="resizer"
       :size="size"
-      @resizing="resizing"
+      @start-resizing="onStartResizing"
+      @resizing="onResizing"
+      @end-resizing="onEndResizing"
     />
   </div>
 </template>
@@ -45,8 +47,14 @@ export default {
     }
   },
   methods: {
-    resizing(info) {
+    onStartResizing() {
+      this.$emit("start-resizing");
+    },
+    onResizing(info) {
       this.$emit("resizing", info);
+    },
+    onEndResizing() {
+      this.$emit("end-resizing");
     }
   }
 };
@@ -59,5 +67,6 @@ export default {
   top: 0;
   bottom: 0;
   right: 0;
+  pointer-events: none;
 }
 </style>

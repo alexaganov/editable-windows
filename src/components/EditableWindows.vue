@@ -1,5 +1,5 @@
 <template>
-  <ul @resize="onResize" class="editable-windows">
+  <ul class="editable-windows">
     <EditableWindow
       v-for="window in windows"
       :key="window.id"
@@ -12,7 +12,8 @@
       :yMin="yMin"
       :xMax="xMax - window.w"
       :yMax="yMax - window.h"
-      :title="window.name"
+      :walls="true"
+      :name="window.name"
       :isActive="window.isActive"
       :content="window.content"
       :handleResizing="setSize"
@@ -34,8 +35,8 @@ export default {
   },
   mounted: function() {
     this.windows = this.$store.getters.getWindows;
-    this.yMax = window.innerHeight;
-    this.xMax = window.innerWidth;
+    this.yMax = this.$el.offsetHeight;
+    this.xMax = this.$el.offsetWidth;
 
     window.addEventListener("resize", this.onResize);
   },
@@ -45,10 +46,13 @@ export default {
       setPosition: SET_POSITION,
       setActive: SET_ACTIVE
     }),
-    onResize(e) {
-      this.yMax = e.target.innerHeight;
-      this.xMax = e.target.innerWidth;
+    onResize() {
+      this.yMax = this.$el.offsetHeight;
+      this.xMax = this.$el.offsetWidth;
     }
+  },
+  destroyed: function() {
+    window.removeEventListener("resize", this.onResize);
   },
   data: function() {
     return {
