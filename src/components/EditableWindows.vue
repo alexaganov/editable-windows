@@ -15,9 +15,9 @@
       :title="window.name"
       :isActive="window.isActive"
       :content="window.content"
-      :resizingHandler="resizingHandler"
-      :draggingHandler="draggingHandler"
-      :activatorHanlder="activatorHanlder"
+      :handleResizing="setSize"
+      :handleDragging="setPosition"
+      :handleActivation="setActive"
     />
   </ul>
 </template>
@@ -25,6 +25,7 @@
 <script>
 import EditableWindow from "./EditableWindow";
 import { SET_SIZE, SET_POSITION, SET_ACTIVE } from "../store/mutations-type";
+import { mapMutations } from "vuex";
 
 export default {
   name: "EditableWindows",
@@ -39,31 +40,14 @@ export default {
     window.addEventListener("resize", this.onResize);
   },
   methods: {
+    ...mapMutations({
+      setSize: SET_SIZE,
+      setPosition: SET_POSITION,
+      setActive: SET_ACTIVE
+    }),
     onResize(e) {
       this.yMax = e.target.innerHeight;
       this.xMax = e.target.innerWidth;
-    },
-    activatorHanlder({ id }) {
-      this.$store.commit({
-        type: SET_ACTIVE,
-        id
-      });
-    },
-    resizingHandler({ w, h, id }) {
-      this.$store.commit({
-        type: SET_SIZE,
-        w,
-        h,
-        id
-      });
-    },
-    draggingHandler({ x, y, id }) {
-      this.$store.commit({
-        type: SET_POSITION,
-        x,
-        y,
-        id
-      });
     }
   },
   data: function() {

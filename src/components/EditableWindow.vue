@@ -48,6 +48,7 @@ export default {
     id: Number,
     resizers: Array,
     content: String,
+    walls: Boolean,
     xMin: { type: Number, default: -Infinity },
     xMax: { type: Number, default: Infinity },
     yMin: { type: Number, default: -Infinity },
@@ -57,9 +58,9 @@ export default {
     wMax: { type: Number, default: Infinity },
     hMax: { type: Number, default: Infinity },
     isActive: { type: Boolean, default: false },
-    activatorHanlder: { type: Function, default: () => {} },
-    resizingHandler: { type: Function, required: true },
-    draggingHandler: { type: Function, required: true }
+    handleActivation: { type: Function, default: () => {} },
+    handleResizing: { type: Function, required: true },
+    handleDragging: { type: Function, required: true }
   },
   computed: {
     editableWindowStyle() {
@@ -72,35 +73,45 @@ export default {
   },
   watch: {
     yMax(newYMax) {
-      if (this.y > newYMax) {
-        this.setPosition({ y: newYMax });
+      if (!(this.y <= this.yMin && this.y >= newYMax)) {
+        if (this.y <= this.yMin) {
+          this.setPosition({ y: this.yMin });
+        } else if (this.y >= newYMax) {
+          this.setPosition({ y: newYMax });
+        }
       }
     },
     xMax(newXMax) {
       if (this.x > newXMax) {
         this.setPosition({ x: newXMax });
+      } else if (this.x < this.xMin) {
+        this.setPosition({ x: this.xMin });
       }
     }
   },
   mounted: function() {},
   methods: {
-    setPosition({ x, y }) {
-      x = this.xMin >= x ? this.xMin : x >= this.xMax ? this.xMax : x;
-      y = this.yMin >= y ? this.yMin : y >= this.yMax ? this.yMax : y;
-
-      this.draggingHandler({ x, y, id: this.id });
+    setPosition({ x = this.x, y = this.y }) {
+      this.handleDragging({ x, y, id: this.id });
     },
-    setSize({ w, h }) {
-      w = this.wMin >= w ? this.wMin : w >= this.wMax ? this.wMax : w;
-      h = this.hMin >= h ? this.hMin : h >= this.hMax ? this.hMax : h;
-
-      this.resizingHandler({ w, h, id: this.id });
+    setSize({ w = this.w, h = this.h }) {
+      this.handleResizing({ w, h, id: this.id });
+    },
+    isResizable(w, h) {
+      return (
+        w >= this.wMin && w <= this.wMax && h >= this.hMin && h <= this.hMax
+      );
+    },
+    isDraggable(x, y) {
+      return (
+        x >= this.xMin && x <= this.xMax && y >= this.yMin && y <= this.yMax
+      );
     },
     dragging(info) {
       switch (info.stage) {
         case "start": {
           this.isDragging = true;
-          this.activatorHanlder({ id: this.id });
+          this.handleActivation({ id: this.id });
 
           break;
         }
@@ -109,7 +120,10 @@ export default {
           const x = this.x + xDir;
           const y = this.y + yDir;
 
-          this.setPosition({ x, y });
+          if (this.isDraggable(x, y)) {
+            this.setPosition({ x, y });
+          }
+
           break;
         }
         case "end": {
@@ -124,10 +138,9 @@ export default {
         case "start": {
           this.initialX = this.x;
           this.initialY = this.y;
-          this.initialWidth = this.width;
-          this.initialHeight = this.height;
           this.isResizing = true;
-          this.activatorHanlder({ id: this.id });
+
+          this.handleActivation({ id: this.id });
 
           break;
         }
@@ -140,13 +153,11 @@ export default {
           const { xDir, yDir, resizer } = info;
           let w = this.w + xDir;
           let h = this.h + yDir;
-          let x = this.x;
-          let y = this.y;
 
           switch (resizer) {
             case RESIZER_TOP_LEFT: {
-              y -= yDir;
-              x -= xDir;
+              const x = this.x - xDir;
+              const y = this.y - yDir;
 
               if (
                 y >= this.yMin &&
@@ -162,10 +173,15 @@ export default {
             }
 
             case RESIZER_TOP_RIGHT: {
-              y -= yDir;
-              x += xDir;
+              const x = this.x + xDir;
+              const y = this.y - yDir;
 
-              if (y >= this.yMin && x <= this.xMax && h >= this.hMin) {
+              if (
+                y >= this.yMin &&
+                x <= this.xMax &&
+                h >= this.hMin &&
+                w >= this.wMin
+              ) {
                 this.setSize({ w, h });
                 this.setPosition({ y });
               }
@@ -174,19 +190,15 @@ export default {
             }
 
             case RESIZER_BOTTOM_LEFT: {
-              y += yDir;
-              x -= xDir;
+              const x = this.x - xDir;
+              const y = this.y - yDir;
 
-              /* if (h >= this.hMin) {
-                this.setSize({ h });
-              }
-
-              if (w > this.wMin) {
-                this.setSize({ w });
-
-                if (x > this.xMin) this.setPosition({ x });
-              } */
-              if (x >= this.xMin && y <= this.yMax && w >= this.wMin) {
+              if (
+                x >= this.xMin &&
+                y <= this.yMax &&
+                w >= this.wMin &&
+                h >= this.hMin
+              ) {
                 this.setSize({ w, h });
                 this.setPosition({ x });
               }
@@ -195,8 +207,8 @@ export default {
             }
 
             case RESIZER_BOTTOM_RIGHT: {
-              y += yDir;
-              x += xDir;
+              const x = this.x + xDir;
+              const y = this.y + yDir;
 
               if (
                 y <= this.yMax &&
@@ -206,12 +218,13 @@ export default {
               ) {
                 this.setSize({ w, h });
               }
+
               break;
             }
             case RESIZER_TOP: {
-              y -= yDir;
+              const y = this.y - yDir;
 
-              if (y >= this.yMin && h >= this.hMin) {
+              if (y > this.yMin && h > this.hMin) {
                 this.setSize({ h });
                 this.setPosition({ y });
               }
@@ -219,7 +232,7 @@ export default {
               break;
             }
             case RESIZER_BOTTOM: {
-              y += yDir;
+              const y = this.y + yDir;
 
               if (y <= this.yMax && h >= this.hMin) {
                 this.setSize({ h });
@@ -227,10 +240,16 @@ export default {
               break;
             }
             case RESIZER_LEFT: {
+              const x = this.x - xDir;
+
+              if (x >= this.xMin && w >= this.wMin && x <= this.xMax) {
+                this.setSize({ w });
+                this.setPosition({ x });
+              }
               break;
             }
             case RESIZER_RIGHT: {
-              x += xDir;
+              const x = this.x + xDir;
 
               if (x <= this.xMax && w >= this.wMin) {
                 this.setSize({ w });
