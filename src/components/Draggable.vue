@@ -2,12 +2,12 @@
   <div
     class="draggable"
     :class="{ 'draggable_is-dragging': isDragging, draggable_debug: debug }"
-    :style="isDragging && draggingStyle"
-    @mousemove.prevent="drag"
+    :style="isDragging && draggingStyles"
+    @mousemove="drag"
     @mouseup="endDrag"
     @mouseleave="endDrag"
   >
-    <div class="draggable__dragger" @mousedown.prevent="startDrag">
+    <div class="draggable__dragger" @mousedown.prevent="startDragging">
       <slot></slot>
     </div>
   </div>
@@ -17,14 +17,11 @@
 export default {
   name: "Draggable",
   props: {
-    outer: {
-      type: Number,
-      default: 200
-    },
+    outer: { type: Number, default: 200 },
     debug: Boolean
   },
   computed: {
-    draggingStyle() {
+    draggingStyles() {
       return {
         padding: `${this.outer}px`,
         left: `${-this.outer}px`,
@@ -33,16 +30,17 @@ export default {
     }
   },
   methods: {
-    startDrag(e) {
+    startDragging(e) {
       if (
-        e.target.classList.contains("draggable__dragger") ||
-        e.target.closest(".draggable__dragger")
+        !this.isDragging &&
+        (e.target.classList.contains("draggable__dragger") ||
+          e.target.closest(".draggable__dragger"))
       ) {
         this.isDragging = true;
         this.initialX = e.clientX;
         this.initialY = e.clientY;
 
-        this.$emit("dragging", { stage: "start" });
+        this.$emit("start-dragging");
       }
     },
     drag(e) {
@@ -50,20 +48,18 @@ export default {
         const xDir = e.clientX - this.initialX;
         const yDir = e.clientY - this.initialY;
 
-        this.$emit("dragging", {
-          xDir,
-          yDir,
-          stage: "dragging"
-        });
-
         this.initialX = e.clientX;
         this.initialY = e.clientY;
+
+        this.$emit("dragging", { xDir, yDir });
       }
     },
     endDrag() {
-      this.isDragging = false;
+      if (this.isDragging) {
+        this.isDragging = false;
 
-      this.$emit("dragging", { stage: "end" });
+        this.$emit("end-dragging");
+      }
     }
   },
   data: function() {
@@ -84,6 +80,7 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
+  user-select: all;
 }
 
 .draggable_is-dragging {
@@ -91,12 +88,12 @@ export default {
 }
 
 .draggable_debug {
-  background-color: rgba(0, 255, 26, 0.4);
+  background-color: rgba(82, 255, 180, 0.5);
 }
 
 .draggable_debug .draggable__dragger {
   border: 1px solid #000;
-  background-color: rgba(255, 0, 0, 1);
+  background-color: rgba(255, 82, 82, 0.5);
 }
 
 .draggable_is-dragging .draggable__dragger {

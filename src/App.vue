@@ -33,4 +33,24 @@ export default {
   background-color: $color-secondary;
   overflow: hidden;
 }
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  overflow: visible;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: $color-primary;
+}
+
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-corner {
+  background-color: $color-primary-dark;
+  border-radius: 1px;
+}
 </style>

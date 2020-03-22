@@ -1,75 +1,103 @@
-import { 
-  SET_SIZE, 
-  SET_POSITION, 
-  SET_ACTIVE,
-  ADD_WINDOW 
-} from './mutations-type';
+import {
+  CREATE_NEW_WINDOW,
+  ADD_WINDOW,
+
+  ADD_UNDO,
+  ADD_REDO,
+
+  REMOVE_WINDOW,
+  RETURN_REMOVED_WINDOW,
+  SET_ACTIVE_WINDOW,
+  UNSET_ACTIVE_WINDOW,
+
+  DELETE_LAST_UNDO,
+  DELETE_LAST_REDO
+} from './mutations-types';
 
 const mutations = {
-  [SET_SIZE](state, payload) {
-    const currentWindow = state.windows.find(window => window.id === payload.id);
+  [CREATE_NEW_WINDOW](state, { nameOfNewWindow }) {
+    const newWindow = {
+      id: ++state.lastCreatedWindowId,
+      name: nameOfNewWindow ? nameOfNewWindow : '',
+      x: 30,
+      y: 30,
+      width: 200,
+      height: 200,
+      isActive: false,
+      isRemoved: false,
+      content: `Window content`,
+    };
 
-    if (typeof payload.w === 'number' && payload.w !== currentWindow.w) {
-      currentWindow.w = payload.w;
-    }
-    
-    if (typeof payload.h === 'number' && payload.h !== currentWindow.h) {
-      currentWindow.h = payload.h;
-    }
+    state.windows.push(newWindow);
   },
-
-  [SET_POSITION](state, payload) {
-    const currentWindow = state.windows.find(window => window.id === payload.id);
-
-    if (currentWindow) {
-      if (typeof payload.x === 'number' && currentWindow.x !== payload.x) {
-        currentWindow.x = payload.x;
-      } 
-
-      if (typeof payload.y === 'number' && currentWindow.y !== payload.y) {
-        currentWindow.y = payload.y;
+  [SET_ACTIVE_WINDOW](state, { id }) {
+    if (typeof id === 'number') {
+      const window = state.windows.find(window => window.id === id);
+  
+      if (window) {
+        window.isActive = true;
       }
     }
   },
-
-  [SET_ACTIVE](state, payload) {
-    const currentWindow = state.windows.find(window => window.id === payload.id);
-    const activeWindow =  state.windows.find(window => window.isActive);
-
-    if (activeWindow) {
-      activeWindow.isActive = false;
+  [UNSET_ACTIVE_WINDOW](state, { id }) {
+    if (typeof id === 'number') {
+      const window = state.windows.find(window => window.id === id);
+      
+      if (window) {
+        window.isActive = false;
+      }
     }
-
-    if (currentWindow)       
-      currentWindow.isActive = true;
+  }, 
+  [ADD_WINDOW](state, window) {
+    state.windows.push(window);
   },
-
-  [ADD_WINDOW](state, payload) {
-    
-    const id = ++state.counter;
-    const activeWindow = state.windows.find(window => window.isActive);
-
-    if (activeWindow) {
-      activeWindow.isActive = false;
+  [ADD_UNDO](state, { undo }) {
+    state.undos.push(undo);
+  },
+  [ADD_REDO](state, { redo }) {
+    state.redos.push(redo);
+  },
+  [DELETE_LAST_UNDO](state) {
+    state.undos.pop();
+  },
+  [DELETE_LAST_REDO](state) {
+    state.redos.pop();
+  },
+  [REMOVE_WINDOW](state, { id }) {
+    if (typeof id === 'number'){
+      const removedWindow = state.windows.find(window => window.id === id);
+  
+      if (removedWindow) {
+        removedWindow.isRemoved = true;
+      }
     }
-
-    const newWindow = {
-      id,
-      name: `Window ${id}`,
-      w: 200,
-      h: 200,
-      x: 30,
-      y: 30,
-      isActive: true,
-      content: `Window ${id}`,
-    };
-
-    if (payload.name) {
-      newWindow.name = payload.name;
+  },
+  [RETURN_REMOVED_WINDOW](state, { id }) {
+    if (typeof id === 'number'){
+      const removedWindow = state.windows.find(window => window.id === id);
+  
+      if (removedWindow) {
+        removedWindow.isRemoved = false;
+      }
     }
-
-    state.windows.push(newWindow);
   }
+  /* [SET_ACTIVE](state, inactiveWindow) {
+    if (inactiveWindow) {
+      inactiveWindow.isActive = true
+    } 
+  },
+  [REMOVE_WINDOW_BY_ID](state, id){
+    const windowIndex = state.windows.findIndex(window => window.id === id);
+
+    if (windowIndex !== -1) {
+      state.windows.splice(windowIndex, 1);
+    }
+  },
+  [DELETE_BY_INDEX](state, windowIndex) {
+    if (typeof windowIndex === 'number' && windowIndex > -1) {
+      state.windows.splice(windowIndex, 1);
+    }
+  } */
 }
 
 export default mutations;

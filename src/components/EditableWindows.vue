@@ -1,54 +1,61 @@
 <template>
   <ul class="editable-windows">
     <EditableWindow
-      v-for="window in windows"
+      tag="li"
+      v-for="(window, index) in windows"
+      v-show="!window.isRemoved"
       :key="window.id"
       :id="window.id"
-      :x="window.x"
-      :y="window.y"
-      :w="window.w"
-      :h="window.h"
-      :xMin="xMin"
-      :yMin="yMin"
-      :xMax="xMax - window.w"
-      :yMax="yMax - window.h"
-      :walls="true"
-      :name="window.name"
-      :isActive="window.isActive"
+      :initial-x="window.x"
+      :initial-y="window.y"
+      :initial-width="window.width"
+      :initial-height="window.height"
+      :name="window.name ? window.name : `Window ${index}`"
+      :is-active="window.isActive"
       :content="window.content"
-      :handleResizing="setSize"
-      :handleDragging="setPosition"
-      :handleActivation="setActive"
+      :min-x="minX"
+      :max-x="maxX"
+      :min-y="minY"
+      :max-y="maxY"
+      @start-dragging="onStartDragging(window.id)"
+      @end-dragging="onEndDragging"
+      @start-resizing="onStartResizing(window.id)"
+      @end-resizing="onEndResizing"
     />
   </ul>
 </template>
 
 <script>
 import EditableWindow from "./EditableWindow";
-import { SET_SIZE, SET_POSITION, SET_ACTIVE } from "../store/mutations-type";
-import { mapMutations } from "vuex";
+import { mapGetters } from "vuex";
+import { SET_ACTIVE_WINDOW } from "../store/actions-types";
 
 export default {
   name: "EditableWindows",
   components: {
     EditableWindow
   },
+  computed: {
+    ...mapGetters(["windows"])
+  },
   mounted: function() {
-    this.windows = this.$store.getters.getWindows;
-    this.yMax = this.$el.offsetHeight;
-    this.xMax = this.$el.offsetWidth;
+    this.maxX = this.$el.offsetWidth;
+    this.maxY = this.$el.offsetHeight;
 
     window.addEventListener("resize", this.onResize);
   },
   methods: {
-    ...mapMutations({
-      setSize: SET_SIZE,
-      setPosition: SET_POSITION,
-      setActive: SET_ACTIVE
-    }),
+    onStartDragging(id) {
+      this.$store.dispatch(SET_ACTIVE_WINDOW, { id });
+    },
+    onStartResizing(id) {
+      this.$store.dispatch(SET_ACTIVE_WINDOW, { id });
+    },
+    onEndDragging(draggerInfo) {},
+    onEndResizing(resizerInfo) {},
     onResize() {
-      this.yMax = this.$el.offsetHeight;
-      this.xMax = this.$el.offsetWidth;
+      this.maxX = this.$el.offsetWidth;
+      this.maxY = this.$el.offsetHeight;
     }
   },
   destroyed: function() {
@@ -56,11 +63,10 @@ export default {
   },
   data: function() {
     return {
-      windows: [],
-      xMin: 0,
-      yMin: 0,
-      xMax: 0,
-      yMax: 0
+      minX: 0,
+      maxX: 0,
+      minY: 0,
+      maxY: 0
     };
   }
 };
@@ -73,6 +79,6 @@ export default {
   height: 100%;
   top: 0;
   left: 0;
-  overflow: hidden;
+  overflow: auto;
 }
 </style>

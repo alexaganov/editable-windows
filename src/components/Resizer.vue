@@ -4,39 +4,49 @@
     @mousemove="resize"
     @mouseleave="endResize"
     :class="[
-      'resizer',
-      { 'resizer_is-resizing': isResizing, resizer_debug: debug },
-      `resizer_${type}`
+      'resizer', `resizer_${type}`,
+      { 
+        'resizer_is-resizing': isResizing, 
+        resizer_debug: debug 
+      },
     ]"
     :style="resizerResizingStyle"
   >
     <div
       :class="`resizer__control resizer_${type}`"
       @mousedown.stop.prevent="startResize"
-      :style="controlStyle"
+      :style="resizerControlStyle"
     ></div>
   </div>
 </template>
 
 <script>
-export const RESIZER_TOP_LEFT = "top-left";
-export const RESIZER_TOP_RIGHT = "top-right";
-export const RESIZER_BOTTOM_LEFT = "bottom-left";
-export const RESIZER_BOTTOM_RIGHT = "bottom-right";
-export const RESIZER_RIGHT = "right";
-export const RESIZER_LEFT = "left";
-export const RESIZER_TOP = "top";
-export const RESIZER_BOTTOM = "bottom";
+export const POINT_TOP_LEFT = "point-top-left";
+export const POINT_TOP_RIGHT = "point-top-right";
+export const POINT_BOTTOM_LEFT = "point-bottom-left";
+export const POINT_BOTTOM_RIGHT = "point-bottom-right";
+export const LINE_RIGHT = "line-right";
+export const LINE_LEFT = "line-left";
+export const LINE_TOP = "line-top";
+export const LINE_BOTTOM = "line-bottom";
 
-export const RESIZER_TYPES = [
-  RESIZER_TOP_LEFT,
-  RESIZER_TOP_RIGHT,
-  RESIZER_BOTTOM_LEFT,
-  RESIZER_BOTTOM_RIGHT,
-  RESIZER_RIGHT,
-  RESIZER_LEFT,
-  RESIZER_TOP,
-  RESIZER_BOTTOM
+export const RESIZER_BORDER_TYPES = [
+  LINE_RIGHT,
+  LINE_LEFT,
+  LINE_TOP,
+  LINE_BOTTOM
+];
+
+export const RESIZER_CORNER_TYPES = [
+  POINT_TOP_LEFT,
+  POINT_TOP_RIGHT,
+  POINT_BOTTOM_LEFT,
+  POINT_BOTTOM_RIGHT
+];
+
+export const RESIZER_ALL_TYPES = [
+  ...RESIZER_BORDER_TYPES,
+  ...RESIZER_CORNER_TYPES
 ];
 
 export default {
@@ -44,77 +54,66 @@ export default {
   props: {
     type: {
       type: String,
-      validator: function(value) {
-        return RESIZER_TYPES.indexOf(value) !== -1;
+      validator: function(resizerType) {
+        return RESIZER_ALL_TYPES.indexOf(resizerType) !== -1;
       },
-      default: "top-left"
+      default: POINT_TOP_LEFT
     },
-    size: {
-      type: Number,
-      default: 10
-    },
-    outer: {
-      type: Number,
-      default: 200
-    },
+    size: { type: Number, default: 10 },
+    outer: { type: Number, default: 200 },
     debug: Boolean
   },
   computed: {
     resizerResizingStyle() {
-      const offset = -(this.isResizing ? this.outer : 0);
-      let style = this.isResizing ? { padding: `${this.outer}px` } : {};
+      const offset = this.isResizing ? -this.outer : 0;
+      const style = {
+        padding: this.isResizing ? `${this.outer}px` : null
+      };
 
       switch (this.type) {
-        case RESIZER_TOP_LEFT:
-        case RESIZER_TOP_RIGHT:
-        case RESIZER_BOTTOM_LEFT:
-        case RESIZER_BOTTOM_RIGHT: {
-          const [vertical, horizontal] = this.type.split("-");
-
-          style[vertical] = style[horizontal] = `${offset}px`;
-          break;
-        }
-
-        case RESIZER_LEFT: {
-          style["left"] = style["top"] = `${offset}px`;
-          break;
-        }
-        case RESIZER_RIGHT:
-          style["right"] = style["top"] = `${offset}px`;
-          break;
-        case RESIZER_TOP:
+        case POINT_TOP_LEFT:
+        case LINE_TOP:
+        case LINE_LEFT:
           style["top"] = style["left"] = `${offset}px`;
           break;
-        case RESIZER_BOTTOM:
+
+        case POINT_TOP_RIGHT:
+        case LINE_RIGHT:
+          style["top"] = style["right"] = `${offset}px`;
+          break;
+
+        case POINT_BOTTOM_RIGHT:
+          style["bottom"] = style["right"] = `${offset}px`;
+          break;
+
+        case POINT_BOTTOM_LEFT:
+        case LINE_BOTTOM:
           style["bottom"] = style["left"] = `${offset}px`;
           break;
       }
 
       return style;
     },
-    controlStyle() {
+    resizerControlStyle() {
       const style = {};
 
       switch (this.type) {
-        case RESIZER_TOP_LEFT:
-        case RESIZER_TOP_RIGHT:
-        case RESIZER_BOTTOM_LEFT:
-        case RESIZER_BOTTOM_RIGHT: {
+        case POINT_TOP_LEFT:
+        case POINT_TOP_RIGHT:
+        case POINT_BOTTOM_LEFT:
+        case POINT_BOTTOM_RIGHT:
           style["width"] = style["height"] = `${this.size}px`;
           break;
-        }
 
-        case RESIZER_LEFT:
-        case RESIZER_RIGHT: {
+        case LINE_LEFT:
+        case LINE_RIGHT:
           style["width"] = `${this.size}px`;
           break;
-        }
-        case RESIZER_TOP:
-        case RESIZER_BOTTOM: {
-          style["height"] = `${this.size}px`;
 
+        case LINE_TOP:
+        case LINE_BOTTOM:
+          style["height"] = `${this.size}px`;
           break;
-        }
       }
 
       return style;
@@ -122,7 +121,7 @@ export default {
   },
   methods: {
     startResize(e) {
-      if (e.target.classList.contains("resizer__control")) {
+      if (!this.isResizing && e.target.classList.contains("resizer__control")) {
         this.isResizing = true;
         this.initialX = e.clientX;
         this.initialY = e.clientY;
@@ -131,8 +130,10 @@ export default {
       }
     },
     endResize() {
-      this.isResizing = false;
-      this.$emit("end-resizing");
+      if (this.isResizing) {
+        this.isResizing = false;
+        this.$emit("end-resizing");
+      }
     },
     resize(e) {
       if (this.isResizing) {
@@ -140,47 +141,47 @@ export default {
         let yDir = 0;
 
         switch (this.type) {
-          case RESIZER_TOP_LEFT:
+          case POINT_TOP_LEFT:
             xDir += this.initialX - e.clientX;
             yDir += this.initialY - e.clientY;
             break;
 
-          case RESIZER_TOP_RIGHT:
+          case POINT_TOP_RIGHT:
             xDir += e.clientX - this.initialX;
             yDir += this.initialY - e.clientY;
             break;
 
-          case RESIZER_BOTTOM_LEFT:
+          case POINT_BOTTOM_LEFT:
             xDir += this.initialX - e.clientX;
             yDir += e.clientY - this.initialY;
             break;
 
-          case RESIZER_BOTTOM_RIGHT:
+          case POINT_BOTTOM_RIGHT:
             xDir += e.clientX - this.initialX;
             yDir += e.clientY - this.initialY;
             break;
 
-          case RESIZER_RIGHT:
+          case LINE_RIGHT:
             xDir += e.clientX - this.initialX;
             break;
 
-          case RESIZER_LEFT:
+          case LINE_LEFT:
             xDir += this.initialX - e.clientX;
             break;
 
-          case RESIZER_TOP:
+          case LINE_TOP:
             yDir += this.initialY - e.clientY;
             break;
 
-          case RESIZER_BOTTOM:
+          case LINE_BOTTOM:
             yDir += e.clientY - this.initialY;
             break;
         }
 
-        this.$emit("resizing", { xDir, yDir, resizer: this.type });
-
         this.initialX = e.clientX;
         this.initialY = e.clientY;
+
+        this.$emit("resizing", { xDir, yDir, resizer: this.type });
       }
     }
   },
@@ -202,35 +203,35 @@ export default {
 }
 
 .resizer_debug {
-  background-color: rgba(0, 255, 26, 0.4);
+  background-color: rgba(82, 255, 180, 0.5);
 }
 
 .resizer_debug .resizer__control {
   border: 1px solid #000;
-  background-color: rgba(255, 0, 0, 1);
+  background-color: rgba(255, 82, 82, 0.5);
 }
 
-.resizer_top,
-.resizer_bottom {
+.resizer_line-top,
+.resizer_line-bottom {
   width: 100%;
 }
 
-.resizer_left,
-.resizer_right {
+.resizer_line-left,
+.resizer_line-right {
   height: 100%;
 }
 
-.resizer_top,
-.resizer_bottom,
-.resizer_left,
-.resizer_right {
+.resizer_line-top,
+.resizer_line-bottom,
+.resizer_line-left,
+.resizer_line-right {
   z-index: 10;
 }
 
-.resizer_top-left,
-.resizer_top-right,
-.resizer_bottom-left,
-.resizer_bottom-right {
+.resizer_point-top-left,
+.resizer_point-top-right,
+.resizer_point-bottom-left,
+.resizer_point-bottom-right {
   z-index: 20;
 }
 
@@ -238,35 +239,35 @@ export default {
   z-index: 30;
 }
 
-.resizer_top {
+.resizer_line-top {
   cursor: n-resize;
 }
 
-.resizer_bottom {
+.resizer_line-bottom {
   cursor: s-resize;
 }
 
-.resizer_left {
+.resizer_line-left {
   cursor: w-resize;
 }
 
-.resizer_right {
+.resizer_line-right {
   cursor: e-resize;
 }
 
-.resizer_top-left {
+.resizer_point-top-left {
   cursor: nwse-resize;
 }
 
-.resizer_top-right {
+.resizer_point-top-right {
   cursor: nesw-resize;
 }
 
-.resizer_bottom-left {
+.resizer_point-bottom-left {
   cursor: nesw-resize;
 }
 
-.resizer_bottom-right {
+.resizer_point-bottom-right {
   cursor: nwse-resize;
 }
 </style>

@@ -3,44 +3,48 @@
     <ul class="main-controls__list">
       <li class="main-controls__item">
         <button
-          @click="$emit('save')"
           class="main-controls__control"
           title="Save"
           type="button"
+          :disabled="isSaveBtnDisabled"
+          @click="onSave"
         >
-          <SaveIcon size="2.5x" stroke-width="1" />
+          <SaveIcon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
         </button>
       </li>
       <li class="main-controls__item">
         <button
-          @click="$emit('undo')"
           class="main-controls__control"
           title="Undo"
           type="button"
+          :disabled="isUndoBtnDisabled"
+          @click="onUndo"
         >
-          <RotateCcwIcon size="2.5x" stroke-width="1" />
+          <RotateCcwIcon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
         </button>
       </li>
 
       <li class="main-controls__item">
         <button
-          @click="$emit('redo')"
           class="main-controls__control"
           title="Redo"
           type="button"
+          :disabled="isRedoBtnDisabled"
+          @click="onRedo"
         >
-          <RotateCwIcon size="2.5x" stroke-width="1" />
+          <RotateCwIcon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
         </button>
       </li>
 
       <li class="main-controls__item">
         <button
-          @click="$emit('delete')"
           class="main-controls__control"
           title="Delete"
           type="button"
+          :disabled="isDeleteBtnDisabled"
+          @click="onDelete"
         >
-          <Trash2Icon size="2.5x" stroke-width="1" />
+          <Trash2Icon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
         </button>
       </li>
     </ul>
@@ -48,6 +52,7 @@
 </template>
 
 <script>
+import { REMOVE_ACTIVE_WINDOW, UNDO, REDO } from "../store/actions-types";
 import {
   RotateCcwIcon,
   RotateCwIcon,
@@ -62,7 +67,33 @@ export default {
     SaveIcon,
     Trash2Icon
   },
-  mounted() {}
+  computed: {
+    isSaveBtnDisabled() {
+      return this.$store.getters.isUndosEmpty;
+    },
+    isUndoBtnDisabled() {
+      return this.$store.getters.isUndosEmpty;
+    },
+    isRedoBtnDisabled() {
+      return this.$store.getters.isRedosEmpty;
+    },
+    isDeleteBtnDisabled() {
+      return !this.$store.getters.isActiveWindowSet;
+    }
+  },
+  mounted() {},
+  methods: {
+    onDelete() {
+      this.$store.dispatch(REMOVE_ACTIVE_WINDOW);
+    },
+    onSave() {},
+    onUndo() {
+      this.$store.dispatch(UNDO);
+    },
+    onRedo() {
+      this.$store.dispatch(REDO);
+    }
+  }
 };
 </script>
 
@@ -78,7 +109,7 @@ export default {
 
   &__item {
     &:not(:last-child) {
-      margin-right: 5px;
+      margin-right: 8px;
     }
   }
 
@@ -88,19 +119,27 @@ export default {
     background-color: transparent;
     border: none;
     color: $color-primary;
-    transition: 0.2s transform;
+    transition: 0.4s all;
+    filter: drop-shadow(0px 0px 10px $color-primary);
 
-    &:hover {
-      transform: scale(1.3);
-    }
-
-    &:active {
-      transform: scale(1);
+    &:not(:disabled):active {
+      transform: scale(0.8);
+      filter: drop-shadow(0px 0px 5px $color-primary);
     }
 
     &:focus {
       outline: none;
     }
+
+    &:disabled {
+      cursor: default;
+      color: $color-primary-dark;
+      filter: none;
+    }
+  }
+
+  &__control-icon {
+    pointer-events: none;
   }
 }
 </style>

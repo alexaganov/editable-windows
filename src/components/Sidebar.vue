@@ -1,12 +1,6 @@
 <template>
   <aside class="sidebar">
-    <MainControls
-      @save="onSave"
-      @delete="onDelete"
-      @redo="onRedo"
-      @undo="onUndo"
-      class="sidebar__main-controls"
-    />
+    <MainControls class="sidebar__main-controls" />
     <EditableWindowList class="sidebar__editable-window-list" />
     <AddEditableWindow class="sidebar__add-editable-window" />
     <!-- <Resizable @resizing="onResizing" :resizers="['right']" /> -->
@@ -18,7 +12,6 @@ import EditableWindowList from "./EditableWindowList";
 import AddEditableWindow from "./AddEditableWindow";
 import MainControls from "./MainControls";
 import Resizable from "./Resizable";
-import { DELETE } from "../store/actions-types";
 
 export default {
   name: "Sidebar",
@@ -42,18 +35,6 @@ export default {
         this.w = w;
       }
     }, */
-    onDelete() {
-      this.$store.dispatch(DELETE);
-    },
-    onSave() {
-      console.log("save");
-    },
-    onUndo() {
-      console.log("undo");
-    },
-    onRedo() {
-      console.log("redo");
-    }
   },
   data: function() {
     return {
@@ -72,9 +53,9 @@ export default {
   flex: 0 0 350px;
   max-width: 100%;
   width: 350px;
-  padding: 15px 30px;
+  padding: 15px 30px 30px 30px;
   background-color: $color-secondary-dark;
-  box-shadow: 0px 0 10px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.2);
   position: relative;
   z-index: 100;
   display: flex;

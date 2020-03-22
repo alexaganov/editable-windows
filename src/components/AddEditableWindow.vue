@@ -4,19 +4,11 @@
       <input
         type="text"
         class="add-editable-window__input"
-        placeholder="Name of new window"
+        placeholder="Enter name of new window"
         v-model="text"
       />
-      <button
-        title="Add new"
-        type="submit"
-        class="add-editable-window__submit-btn"
-      >
-        <PlusIcon
-          size="2x"
-          stroke-width="1"
-          class="add-editable-window__submit-btn-icon"
-        />
+      <button title="Add new" type="submit" class="add-editable-window__submit-btn">
+        <PlusIcon size="2x" stroke-width="1" class="add-editable-window__submit-btn-icon" />
       </button>
     </form>
   </div>
@@ -24,7 +16,7 @@
 
 <script>
 import { PlusIcon } from "vue-feather-icons";
-import { ADD_WINDOW } from "../store/mutations-type";
+import { CREATE_NEW_WINDOW } from "../store/actions-types";
 
 export default {
   name: "AddEditableWindow",
@@ -33,9 +25,8 @@ export default {
   },
   methods: {
     onSubmit() {
-      this.$store.commit({
-        type: ADD_WINDOW,
-        name: this.text
+      this.$store.dispatch(CREATE_NEW_WINDOW, {
+        nameOfNewWindow: this.text
       });
 
       if (this.text) this.text = "";
@@ -64,12 +55,13 @@ export default {
     background-color: $color-secondary;
     margin-right: 15px;
     font-size: 0.875em;
-    padding: 0.6em 1.2em;
+    padding: 0.8em 1.2em;
     color: $text-color-primary;
-    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 
     &::placeholder {
-      color: $text-color-tertiary;
+      color: $color-secondary-light;
+      user-select: none;
     }
   }
 
@@ -93,6 +85,7 @@ export default {
 
     &:hover {
       background: $color-primary;
+      box-shadow: 0 0 20px -5px $color-primary;
       // color: $color-secondary-dark;
     }
   }

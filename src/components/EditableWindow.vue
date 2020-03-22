@@ -1,264 +1,91 @@
 <template>
-  <li
+  <Moveable
     class="editable-window"
+    :tag="tag"
     :class="{
       'editable-window_is-dragging': isDragging,
       'editable-window_is-resizing': isResizing,
       'editable-window_is-active': isActive
     }"
-    :style="editableWindowStyle"
+    :initial-x="initialX"
+    :initial-y="initialY"
+    :initial-width="initialWidth"
+    :initial-height="initialHeight"
+    :min-x="minX"
+    :min-y="minY"
+    :resizers="resizers"
+    @start-resizing="onStartResizing"
+    @resizing="onResizing"
+    @end-resizing="onEndResizing"
+    @start-dragging="onStartDragging"
+    @dragging="onDragging"
+    @end-dragging="onEndDragging"
     :title="name"
   >
-    <div class="editable-window__controls">
-      <Draggable @dragging="dragging" />
-      <Resizable
-        @start-resizing="onStartResizing"
-        @resizing="onResizing"
-        @end-resizing="onEndResizing"
-      />
-    </div>
     <div class="editable-window__content">
       <div class="editable-window__header"></div>
       <div class="editable-window__body">{{ this.content }}</div>
     </div>
-  </li>
+  </Moveable>
 </template>
 
 <script>
-import Draggable from "./Draggable";
-import Resizable from "./Resizable";
-import {
-  RESIZER_TOP_LEFT,
-  RESIZER_TOP_RIGHT,
-  RESIZER_BOTTOM_LEFT,
-  RESIZER_BOTTOM_RIGHT,
-  RESIZER_TOP,
-  RESIZER_BOTTOM,
-  RESIZER_LEFT,
-  RESIZER_RIGHT
-} from "./Resizer";
+import Moveable from "./Moveable";
+import { SET_ACTIVE } from "../store/actions-types";
 
 export default {
   name: "EditableWindow",
   components: {
-    Draggable,
-    Resizable
+    Moveable
   },
   props: {
-    x: { type: Number, default: 0 },
-    y: { type: Number, default: 0 },
-    w: { type: Number, default: 200 },
-    h: { type: Number, default: 200 },
+    tag: String,
+    initialX: Number,
+    initialY: Number,
+    initialWidth: Number,
+    initialHeight: Number,
     name: String,
     id: Number,
-    resizers: Array,
+    resizers: [Array, String],
     content: String,
     walls: Boolean,
-    xMin: { type: Number, default: -Infinity },
-    xMax: { type: Number, default: Infinity },
-    yMin: { type: Number, default: -Infinity },
-    yMax: { type: Number, default: Infinity },
-    wMin: { type: Number, default: 200 },
-    hMin: { type: Number, default: 200 },
-    wMax: { type: Number, default: Infinity },
-    hMax: { type: Number, default: Infinity },
-    isActive: { type: Boolean, default: false },
-    handleActivation: { type: Function, default: () => {} },
-    handleResizing: { type: Function, required: true },
-    handleDragging: { type: Function, required: true }
+    minX: Number,
+    maxX: Number,
+    minY: Number,
+    maxY: Number,
+    minWidth: Number,
+    maxWidth: Number,
+    minHeight: Number,
+    maxHeight: Number,
+    isActive: Boolean
   },
-  computed: {
-    editableWindowStyle() {
-      return {
-        width: `${this.w}px`,
-        height: `${this.h}px`,
-        transform: `translate(${this.x}px, ${this.y}px)`
-      };
-    }
-  },
-  watch: {
-    yMax(newYMax) {
-      if (this.y >= newYMax) {
-        this.setPosition({ y: newYMax });
-      }
-    },
-    xMax(newXMax) {
-      if (this.x >= newXMax) {
-        this.setPosition({ x: newXMax });
-      }
-    }
-  },
-  mounted: function() {},
+  mounted() {},
   methods: {
-    setPosition({ x = this.x, y = this.y }) {
-      this.handleDragging({ x, y, id: this.id });
+    onStartDragging(data) {
+      this.isDragging = true;
+      this.$emit("start-dragging", data);
     },
-    setSize({ w = this.w, h = this.h }) {
-      this.handleResizing({ w, h, id: this.id });
+    onDragging(data) {
+      this.$emit("dragging", data);
     },
-    isResizable(w, h) {
-      return (
-        w >= this.wMin && w <= this.wMax && h >= this.hMin && h <= this.hMax
-      );
+    onEndDragging(data) {
+      this.isDragging = false;
+      this.$emit("end-dragging", data);
     },
-    isDraggable(x, y) {
-      return (
-        !this.walls ||
-        (x >= this.xMin && x <= this.xMax && y >= this.yMin && y <= this.yMax)
-      );
-    },
-    dragging(info) {
-      switch (info.stage) {
-        case "start": {
-          this.isDragging = true;
-          this.handleActivation({ id: this.id });
-
-          break;
-        }
-        case "dragging": {
-          const { xDir, yDir } = info;
-          const x = this.x + xDir;
-          const y = this.y + yDir;
-
-          if (this.isDraggable(x, y)) {
-            this.setPosition({ x, y });
-          }
-
-          break;
-        }
-        case "end": {
-          this.isDragging = false;
-
-          break;
-        }
-      }
-    },
-    onStartResizing() {
-      this.initialX = this.x;
-      this.initialY = this.y;
+    onStartResizing(data) {
       this.isResizing = true;
-
-      this.handleActivation({ id: this.id });
+      this.$emit("start-resizing", data);
     },
-    onEndResizing() {
+    onResizing(data) {
+      this.$emit("resizing", data);
+    },
+    onEndResizing(data) {
       this.isResizing = false;
-    },
-    onResizing(info) {
-      const { xDir, yDir, resizer } = info;
-      let w = this.w + xDir;
-      let h = this.h + yDir;
-
-      switch (resizer) {
-        case RESIZER_TOP_LEFT: {
-          const x = this.x - xDir;
-          const y = this.y - yDir;
-
-          if (
-            y >= this.yMin &&
-            x >= this.xMin &&
-            h >= this.hMin &&
-            w >= this.wMin
-          ) {
-            this.setSize({ w, h });
-            this.setPosition({ y, x });
-          }
-
-          break;
-        }
-
-        case RESIZER_TOP_RIGHT: {
-          const x = this.x + xDir;
-          const y = this.y - yDir;
-
-          if (
-            y >= this.yMin &&
-            x <= this.xMax &&
-            h >= this.hMin &&
-            w >= this.wMin
-          ) {
-            this.setSize({ w, h });
-            this.setPosition({ y });
-          }
-
-          break;
-        }
-
-        case RESIZER_BOTTOM_LEFT: {
-          const x = this.x - xDir;
-          const y = this.y - yDir;
-
-          if (
-            x >= this.xMin &&
-            y <= this.yMax &&
-            w >= this.wMin &&
-            h >= this.hMin
-          ) {
-            this.setSize({ w, h });
-            this.setPosition({ x });
-          }
-
-          break;
-        }
-
-        case RESIZER_BOTTOM_RIGHT: {
-          const x = this.x + xDir;
-          const y = this.y + yDir;
-
-          if (
-            y <= this.yMax &&
-            x <= this.xMax &&
-            h >= this.hMin &&
-            w >= this.wMin
-          ) {
-            this.setSize({ w, h });
-          }
-
-          break;
-        }
-        case RESIZER_TOP: {
-          const y = this.y - yDir;
-
-          if (y > this.yMin && h > this.hMin) {
-            this.setSize({ h });
-            this.setPosition({ y });
-          }
-
-          break;
-        }
-        case RESIZER_BOTTOM: {
-          const y = this.y + yDir;
-
-          if (y <= this.yMax && h >= this.hMin) {
-            this.setSize({ h });
-          }
-          break;
-        }
-        case RESIZER_LEFT: {
-          const x = this.x - xDir;
-
-          if (x >= this.xMin && w >= this.wMin && x <= this.xMax) {
-            this.setSize({ w });
-            this.setPosition({ x });
-          }
-          break;
-        }
-        case RESIZER_RIGHT: {
-          const x = this.x + xDir;
-
-          if (x <= this.xMax && w >= this.wMin) {
-            this.setSize({ w });
-          }
-
-          break;
-        }
-      }
+      this.$emit("end-resizing", data);
     }
   },
-  data: function() {
+  data() {
     return {
-      initialX: 0,
-      initialY: 0,
-      outer: 200,
       isDragging: false,
       isResizing: false
     };
@@ -283,7 +110,6 @@ export default {
     z-index: 100;
     border: 1px solid $text-color-primary;
     color: $text-color-primary;
-    // box-shadow: inset 0 0 0 5px transparentize($color-primary, 0.7);
   }
 
   &_is-dragging {

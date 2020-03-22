@@ -12,3 +12,14 @@ export const scrollToBottom = (element) => {
     behavior: 'smooth'
   });
 }
+
+export const scrollToRight = (element) => {
+  element.scrollTo({
+    left: element.scrollWidth - element.clientWidth,
+    behavior: 'smooth'
+  });
+}
+
+export const getArrayWithoutDuplicates = (arr) => {
+  return arr.filter((item, index) => arr.indexOf(item) === index);
+}

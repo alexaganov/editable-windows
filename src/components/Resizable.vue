@@ -1,21 +1,44 @@
 <template>
-  <div class="resizable" :style="resizableStyle">
-    <Resizer
-      v-for="resizer in resizers"
-      :key="resizer"
-      :debug="debug"
-      :type="resizer"
-      :size="size"
-      @start-resizing="onStartResizing"
-      @resizing="onResizing"
-      @end-resizing="onEndResizing"
-    />
+  <div class="resizable">
+    <div class="resizable__resizers" :style="resizersStyle">
+      <Resizer
+        v-for="resizer in activeResizers"
+        :key="resizer"
+        :debug="debug"
+        :type="resizer"
+        :size="resizerSize"
+        :outer="resizerOuter"
+        @start-resizing="onStartResizing"
+        @resizing="onResizing"
+        @end-resizing="onEndResizing"
+      />
+    </div>
   </div>
 </template>
 
 <script>
-import { RESIZER_TYPES } from "./Resizer";
+import { getArrayWithoutDuplicates } from "../halpers";
 import Resizer from "./Resizer";
+
+import {
+  RESIZER_ALL_TYPES,
+  RESIZER_BORDER_TYPES,
+  RESIZER_CORNER_TYPES
+} from "./Resizer";
+
+export const ALL = "all";
+export const BORDERS = "borders";
+export const CORNERS = "corners";
+
+export const RESIZER_TYPES = {
+  [ALL]: RESIZER_ALL_TYPES,
+  [BORDERS]: RESIZER_BORDER_TYPES,
+  [CORNERS]: RESIZER_CORNER_TYPES
+};
+
+const isResizerExist = resizer => {
+  return resizer in RESIZER_TYPES || RESIZER_TYPES[ALL].indexOf(resizer) !== -1;
+};
 
 export default {
   name: "Resizable",
@@ -24,25 +47,45 @@ export default {
   },
   props: {
     resizers: {
-      type: Array,
-      default: function() {
-        return RESIZER_TYPES;
+      type: [Array, String],
+      default() {
+        return RESIZER_TYPES[ALL];
       },
-      validator: function(resizers) {
-        return resizers.every(resizer => RESIZER_TYPES.indexOf(resizer) !== -1);
+      validator(resizers) {
+        resizers = typeof resizers === "string" ? [resizers] : resizers;
+
+        return resizers.every(isResizerExist);
       },
       required: false
     },
-    size: {
-      type: Number,
-      default: 10
-    },
+    resizerSize: { type: Number, default: 10 },
+    resizerOuter: Number,
     debug: Boolean
   },
   computed: {
-    resizableStyle() {
+    activeResizers() {
+      const result = [];
+      const resizers =
+        typeof this.resizers === "string"
+          ? [this.resizers]
+          : getArrayWithoutDuplicates(this.resizers);
+
+      resizers.forEach(resizer => {
+        if (resizer in RESIZER_TYPES && result.indexOf(resizer) === -1) {
+          result.push(...RESIZER_TYPES[resizer]);
+        } else {
+          result.push(resizer);
+        }
+      });
+
+      return result;
+    },
+    resizersStyle() {
       return {
-        margin: `${-this.size / 2}px`
+        top: `${-this.resizerSize / 2}px`,
+        right: `${-this.resizerSize / 2}px`,
+        bottom: `${-this.resizerSize / 2}px`,
+        left: `${-this.resizerSize / 2}px`
       };
     }
   },
@@ -50,23 +93,28 @@ export default {
     onStartResizing() {
       this.$emit("start-resizing");
     },
-    onResizing(info) {
-      this.$emit("resizing", info);
-    },
     onEndResizing() {
       this.$emit("end-resizing");
+    },
+    onResizing(data) {
+      this.$emit("resizing", data);
     }
   }
 };
 </script>
 
-<style>
+<style lang="scss">
 .resizable {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
   right: 0;
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
+
+  &__resizers {
+    position: absolute;
+  }
 }
 </style>
