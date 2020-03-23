@@ -14,7 +14,7 @@
       </li>
       <li class="main-controls__item">
         <button
-          class="main-controls__control"
+          class="main-controls__control main-controls__control-undo"
           title="Undo"
           type="button"
           :disabled="isUndoBtnDisabled"
@@ -26,7 +26,7 @@
 
       <li class="main-controls__item">
         <button
-          class="main-controls__control"
+          class="main-controls__control main-controls__control-redo"
           title="Redo"
           type="button"
           :disabled="isRedoBtnDisabled"
@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import { REMOVE_ACTIVE_WINDOW, UNDO, REDO } from "../store/actions-types";
+import { SAVE, UNDO, REDO, REMOVE_ACTIVE_WINDOW } from "../store/actions-types";
 import {
   RotateCcwIcon,
   RotateCwIcon,
@@ -86,7 +86,9 @@ export default {
     onDelete() {
       this.$store.dispatch(REMOVE_ACTIVE_WINDOW);
     },
-    onSave() {},
+    onSave() {
+      this.$store.dispatch(SAVE);
+    },
     onUndo() {
       this.$store.dispatch(UNDO);
     },
@@ -114,16 +116,18 @@ export default {
   }
 
   &__control {
+    $parent: &;
+
     padding: 0.5em;
     cursor: pointer;
     background-color: transparent;
     border: none;
     color: $color-primary;
-    transition: 0.4s all;
+    transition: 0.4s all ease;
     filter: drop-shadow(0px 0px 10px $color-primary);
 
     &:not(:disabled):active {
-      transform: scale(0.8);
+      // transform: scale(0.8);
       filter: drop-shadow(0px 0px 5px $color-primary);
     }
 
@@ -136,6 +140,14 @@ export default {
       color: $color-primary-dark;
       filter: none;
     }
+  }
+
+  &__control-undo:not(:disabled):active {
+    transform: rotate(-45deg);
+  }
+
+  &__control-redo:not(:disabled):active {
+    transform: rotate(45deg);
   }
 
   &__control-icon {

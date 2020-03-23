@@ -1,20 +1,17 @@
 const state = {
+  lastCreatedWindowId: -1,
+
+  windows: [],
   undos: [],
   redos: [],
-  lastCreatedWindowId: -1,
-  windows: [
-    /* {
-      id: 0,
-      x: 50,
-      y: 50,
-      width: 200,
-      height: 200,
-      name: 'hardcoded window',
-      content: 'hardcoded window',
-      isActive: true,
-      isDeleted: false
-    } */
-  ],
+
+  windowsInitialX: 30,
+  windowsInitialY: 30,
+  windowsInitialWidth: 200,
+  windowsInitialHeight: 200,
+  windowsMinWidth: 100,
+  windowsMinHeight: 100,
+  windowsInitialContent: 'Empty'
 };
 
 export default state;

@@ -1,37 +1,35 @@
-export const ADD_WINDOW = 'ADD_WINDOW';
-export const CREATE_NEW_WINDOW = 'CREATE_NEW_WINDOW'; 
+export const CREATE_NEW_WINDOW      = 'CREATE_NEW_WINDOW'; 
+export const REMOVE_WINDOW          = 'REMOVE_WINDOW'; 
+export const RESTORE_WINDOW         = 'RESTORE_WINDOW'; 
+export const DELETE_REMOVED_WINDOWS = 'DELETE_REMOVED_WINDOWS';
 
-export const REMOVE_WINDOW = 'REMOVE_WINDOW'; 
-export const RETURN_REMOVED_WINDOW = 'RETURN_REMOVED_WINDOW'; 
+export const SET_WINDOW_POSITION    = 'SET_WINDOW_POSITION';
+export const SET_WINDOW_SIZE        = 'SET_WINDOW_SIZE';
+export const SET_ACTIVE_WINDOW      = 'SET_ACTIVE_WINDOW';
+export const UNSET_ACTIVE_WINDOW      = 'UNSET_ACTIVE_WINDOW';
 
-export const SET_SIZE = 'SET_SIZE';
-export const SET_POSITION = 'SET_POSITION';
-export const SET_ACTIVE = 'SET_ACTIVE';
-
-export const SET_ACTIVE_WINDOW= 'SET_ACTIVE_WINDOW';
-export const UNSET_ACTIVE_WINDOW= 'UNSET_ACTIVE_WINDOW';
-
-export const ADD_UNDO = 'ADD_UNDO';
-export const ADD_REDO = 'ADD_REDO';
-export const GET_UNDO = 'GET_UNDO';
-export const GET_REDO = 'GET_REDO';
-
-export const DELETE_LAST_UNDO = 'DELETE_LAST_UNDO';
-export const DELETE_LAST_REDO = 'DELETE_LAST_REDO';
+export const PUSH_UNDO              = 'PUSH_UNDO';
+export const PUSH_REDO              = 'PUSH_REDO';
+export const POP_UNDO               = 'POP_UNDO';
+export const POP_REDO               = 'POP_REDO';
+export const CLEAR_UNDOS            = 'CLEAR_UNDOS';
+export const CLEAR_REDOS            = 'CLEAR_REDOS';
 
 export default {
-  CREATE_NEW_WINDOW,
-  ADD_WINDOW,
-
+  CREATE_NEW_WINDOW,  
   REMOVE_WINDOW,
-  RETURN_REMOVED_WINDOW,
+  RESTORE_WINDOW,
+  DELETE_REMOVED_WINDOWS,
 
+  SET_WINDOW_POSITION,
+  SET_WINDOW_SIZE,
   SET_ACTIVE_WINDOW,
   UNSET_ACTIVE_WINDOW,
   
-  ADD_UNDO,
-  ADD_REDO,
-
-  DELETE_LAST_UNDO,
-  DELETE_LAST_REDO
+  PUSH_UNDO,
+  PUSH_REDO,
+  POP_UNDO,
+  POP_REDO,
+  CLEAR_UNDOS,
+  CLEAR_REDOS,
 }

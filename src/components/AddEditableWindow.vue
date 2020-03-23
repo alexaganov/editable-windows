@@ -7,7 +7,7 @@
         placeholder="Enter name of new window"
         v-model="text"
       />
-      <button title="Add new" type="submit" class="add-editable-window__submit-btn">
+      <button title="Add new window" type="submit" class="add-editable-window__submit-btn">
         <PlusIcon size="2x" stroke-width="1" class="add-editable-window__submit-btn-icon" />
       </button>
     </form>
@@ -51,13 +51,13 @@ export default {
   &__input {
     width: 100%;
     border: 0;
-    border-radius: 2px;
+    border-radius: 5px;
     background-color: $color-secondary;
     margin-right: 15px;
     font-size: 0.875em;
     padding: 0.8em 1.2em;
     color: $text-color-primary;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
 
     &::placeholder {
       color: $color-secondary-light;
@@ -72,7 +72,7 @@ export default {
   &__submit-btn {
     cursor: pointer;
     color: $color-secondary-dark;
-    border-radius: 2px;
+    border-radius: 5px;
     // border: 1px solid $color-primary;
     border: 0;
     padding: 0 0.6em;

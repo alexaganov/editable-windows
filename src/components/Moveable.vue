@@ -88,11 +88,79 @@ export default {
     },
     properMaxY() {
       return Number.isFinite(this.maxY) ? this.maxY - this.height : this.maxY;
+    },
+    position() {
+      return {
+        x: this.x,
+        y: this.y
+      };
+    },
+    size() {
+      return {
+        width: this.width,
+        height: this.height
+      };
+    },
+    positionAndSize() {
+      return {
+        ...this.position,
+        ...this.size
+      };
     }
   },
-  mounted() {},
+  watch: {
+    initialX(newInitialX) {
+      this.x = newInitialX;
+    },
+    initialY(newInitialY) {
+      this.y = newInitialY;
+    },
+    initialWidth(newInitialWidth) {
+      this.width = newInitialWidth;
+    },
+    initialHeight(newInitialHeight) {
+      this.height = newInitialHeight;
+    }
+  },
   methods: {
-    // dragging
+    onStartDragging() {
+      this.$emit("start-dragging", this.position);
+    },
+    onEndDragging() {
+      this.$emit("end-dragging", this.position);
+    },
+    onDragging({ xDir, yDir }) {
+      if (this.addToPosition(xDir, yDir)) {
+        this.$emit("dragging", this.position);
+      }
+    },
+
+    onStartResizing() {
+      this.$emit("start-resizing", this.positionAndSize);
+    },
+    onEndResizing() {
+      this.$emit("end-resizing", this.positionAndSize);
+    },
+    onResizing({ xDir, yDir, resizer }) {
+      if (this.addToSize(xDir, yDir, resizer)) {
+        this.$emit("resizing", this.positionAndSize);
+      }
+    },
+
+    addToPosition(xDir = 0, yDir = 0) {
+      const x = this.x + xDir;
+      const y = this.y + yDir;
+
+      if (this.isDraggable(x, y)) {
+        this.x = x;
+        this.y = y;
+
+        return true;
+      }
+
+      return false;
+    },
+
     isDraggable(x, y) {
       return (
         x >= this.minX &&
@@ -101,40 +169,124 @@ export default {
         y <= this.properMaxY
       );
     },
-    onStartDragging() {
-      this.$emit("start-dragging", { x: this.x, y: this.y });
-    },
-    onEndDragging() {
-      this.$emit("end-dragging", { x: this.x, y: this.y });
-    },
-    onDragging({ xDir, yDir }) {
-      const x = this.x + xDir;
-      const y = this.y + yDir;
 
-      if (this.isDraggable(x, y)) {
-        this.x = x;
-        this.y = y;
+    addToSize(xDir = 0, yDir = 0, resizer) {
+      let w = this.width + xDir;
+      let h = this.height + yDir;
 
-        this.$emit("dragging", { x: this.x, y: this.y });
+      switch (resizer) {
+        case POINT_TOP_LEFT: {
+          const x = this.x - xDir;
+          const y = this.y - yDir;
+
+          if (this.isTopLeftResizerResizable(x, y, w, h)) {
+            this.x = x;
+            this.y = y;
+            this.width = w;
+            this.height = h;
+
+            return true;
+          }
+
+          break;
+        }
+
+        case LINE_TOP: {
+          const y = this.y - yDir;
+
+          if (this.isTopResizerResizable(y, h)) {
+            this.y = y;
+            this.height = h;
+
+            return true;
+          }
+
+          break;
+        }
+
+        case POINT_TOP_RIGHT: {
+          const x = this.x + xDir;
+          const y = this.y - yDir;
+
+          if (this.isTopRightResizerResizable(x, y, w, h)) {
+            this.y = y;
+            this.width = w;
+            this.height = h;
+
+            return true;
+          }
+
+          break;
+        }
+
+        case LINE_RIGHT: {
+          const x = this.x + xDir;
+
+          if (this.isRightResizerResizable(x, w)) {
+            this.width = w;
+
+            return true;
+          }
+
+          break;
+        }
+
+        case POINT_BOTTOM_RIGHT: {
+          const x = this.x + xDir;
+          const y = this.y + yDir;
+
+          if (this.isBottomRightResizerResizable(x, y, w, h)) {
+            this.width = w;
+            this.height = h;
+
+            return true;
+          }
+
+          break;
+        }
+
+        case LINE_BOTTOM: {
+          const y = this.y + yDir;
+
+          if (this.isBottomResizerResizable(y, h)) {
+            this.height = h;
+
+            return true;
+          }
+          break;
+        }
+
+        case POINT_BOTTOM_LEFT: {
+          const x = this.x - xDir;
+          const y = this.y + yDir;
+
+          if (this.isBottomLeftResizerResizable(x, y, w, h)) {
+            this.x = x;
+            this.width = w;
+            this.height = h;
+
+            return true;
+          }
+
+          break;
+        }
+
+        case LINE_LEFT: {
+          const x = this.x - xDir;
+
+          if (this.isLeftResizerResizable(x, w)) {
+            this.x = x;
+            this.width = w;
+
+            return true;
+          }
+          break;
+        }
       }
+
+      return false;
     },
-    // resizing
-    onStartResizing() {
-      this.$emit("start-resizing", {
-        x: this.x,
-        y: this.y,
-        w: this.width,
-        h: this.height
-      });
-    },
-    onEndResizing() {
-      this.$emit("end-resizing", {
-        x: this.x,
-        y: this.y,
-        w: this.width,
-        h: this.height
-      });
-    },
+
     isTopLeftResizerResizable(x, y, w, h) {
       return (
         x >= this.minX &&
@@ -143,6 +295,7 @@ export default {
         h >= this.minHeight
       );
     },
+
     isTopResizerResizable(y, h) {
       return y >= this.minY && h >= this.minHeight;
     },
@@ -183,112 +336,6 @@ export default {
     },
     isLeftResizerResizable(x, w) {
       return x >= this.minX && w >= this.minWidth && x <= this.properMaxX;
-    },
-
-    onResizing({ xDir, yDir, resizer }) {
-      let w = this.width + xDir;
-      let h = this.height + yDir;
-
-      switch (resizer) {
-        case POINT_TOP_LEFT: {
-          const x = this.x - xDir;
-          const y = this.y - yDir;
-
-          if (this.isTopLeftResizerResizable(x, y, w, h)) {
-            this.x = x;
-            this.y = y;
-            this.width = w;
-            this.height = h;
-          }
-
-          break;
-        }
-
-        case LINE_TOP: {
-          const y = this.y - yDir;
-
-          if (this.isTopResizerResizable(y, h)) {
-            this.y = y;
-            this.height = h;
-          }
-
-          break;
-        }
-
-        case POINT_TOP_RIGHT: {
-          const x = this.x + xDir;
-          const y = this.y - yDir;
-
-          if (this.isTopRightResizerResizable(x, y, w, h)) {
-            this.y = y;
-            this.width = w;
-            this.height = h;
-          }
-
-          break;
-        }
-
-        case LINE_RIGHT: {
-          const x = this.x + xDir;
-
-          if (this.isRightResizerResizable(x, w)) {
-            this.width = w;
-          }
-
-          break;
-        }
-
-        case POINT_BOTTOM_RIGHT: {
-          const x = this.x + xDir;
-          const y = this.y + yDir;
-
-          if (this.isBottomRightResizerResizable(x, y, w, h)) {
-            this.width = w;
-            this.height = h;
-          }
-
-          break;
-        }
-
-        case LINE_BOTTOM: {
-          const y = this.y + yDir;
-
-          if (this.isBottomResizerResizable(y, h)) {
-            this.height = h;
-          }
-          break;
-        }
-
-        case POINT_BOTTOM_LEFT: {
-          const x = this.x - xDir;
-          const y = this.y + yDir;
-
-          if (this.isBottomLeftResizerResizable(x, y, w, h)) {
-            this.x = x;
-            this.width = w;
-            this.height = h;
-          }
-
-          break;
-        }
-
-        case LINE_LEFT: {
-          const x = this.x - xDir;
-
-          if (this.isLeftResizerResizable(x, w)) {
-            this.x = x;
-            this.width = w;
-          }
-          break;
-        }
-      }
-
-      this.$emit("resizing", {
-        x: this.x,
-        y: this.y,
-        width: this.width,
-        height: this.height
-      });
     }
   },
   data() {

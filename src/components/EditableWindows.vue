@@ -1,5 +1,5 @@
 <template>
-  <ul class="editable-windows">
+  <transition-group tag="ul" class="editable-windows">
     <EditableWindow
       tag="li"
       v-for="(window, index) in windows"
@@ -17,18 +17,24 @@
       :max-x="maxX"
       :min-y="minY"
       :max-y="maxY"
-      @start-dragging="onStartDragging(window.id)"
+      :min-width="windowsMinWidth"
+      :min-height="windowsMinHeight"
+      @start-dragging="onStartDragging"
       @end-dragging="onEndDragging"
-      @start-resizing="onStartResizing(window.id)"
+      @start-resizing="onStartResizing"
       @end-resizing="onEndResizing"
     />
-  </ul>
+  </transition-group>
 </template>
 
 <script>
 import EditableWindow from "./EditableWindow";
 import { mapGetters } from "vuex";
-import { SET_ACTIVE_WINDOW } from "../store/actions-types";
+
+import {
+  SET_ACTIVE_WINDOW,
+  SET_WINDOW_POSITION_SIZE
+} from "../store/actions-types";
 
 export default {
   name: "EditableWindows",
@@ -36,7 +42,7 @@ export default {
     EditableWindow
   },
   computed: {
-    ...mapGetters(["windows"])
+    ...mapGetters(["windows", "windowsMinWidth", "windowsMinHeight"])
   },
   mounted: function() {
     this.maxX = this.$el.offsetWidth;
@@ -51,8 +57,18 @@ export default {
     onStartResizing(id) {
       this.$store.dispatch(SET_ACTIVE_WINDOW, { id });
     },
-    onEndDragging(draggerInfo) {},
-    onEndResizing(resizerInfo) {},
+    onEndDragging(id, position) {
+      this.$store.dispatch(SET_WINDOW_POSITION_SIZE, {
+        id,
+        ...position
+      });
+    },
+    onEndResizing(id, positionAndSize) {
+      this.$store.dispatch(SET_WINDOW_POSITION_SIZE, {
+        id,
+        ...positionAndSize
+      });
+    },
     onResize() {
       this.maxX = this.$el.offsetWidth;
       this.maxY = this.$el.offsetHeight;

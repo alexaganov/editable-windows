@@ -50,9 +50,9 @@ export default {
 @import "~@/scss/variables";
 
 .sidebar {
-  flex: 0 0 350px;
-  max-width: 100%;
-  width: 350px;
+  flex: 1 1 100%;
+  max-width: 350px;
+  min-width: 300px;
   padding: 15px 30px 30px 30px;
   background-color: $color-secondary-dark;
   box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.2);

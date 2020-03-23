@@ -1,43 +1,160 @@
 import {
   CREATE_NEW_WINDOW,
-  SET_ACTIVE_WINDOW,
   REMOVE_ACTIVE_WINDOW,
+
+  SET_WINDOW_SIZE,
+  SET_WINDOW_POSITION,
+  SET_WINDOW_POSITION_SIZE,
+  SET_ACTIVE_WINDOW,
+  
   UNDO,
-  REDO
+  REDO,
+  SAVE,
+  PROCESS_UNDO_OR_REDO
 } from './actions-types';
-
-const UNDO_CREATE_NEW_WINDOW = 'UNDO_CREATE_NEW_WINDOW';
-const UNDO_SET_ACTIVE_WINDOW = 'UNDO_SET_ACTIVE_WINDOW';
-const UNDO_UNSET_ACTIVE_WINDOW = 'UNDO_UNSET_ACTIVE_WINDOW';
-const UNDO_REMOVE_WINDOW = 'UNDO_REMOVE_WINDOW';
-
-const REDO_CREATE_NEW_WINDOW = 'REDO_CREATE_NEW_WINDOW';
-const REDO_SET_ACTIVE_WINDOW = 'REDO_SET_ACTIVE_WINDOW';
-const REDO_UNSET_ACTIVE_WINDOW = 'REDO_UNSET_ACTIVE_WINDOW';
-const REDO_REMOVE_WINDOW = 'REDO_REMOVE_WINDOW';
-
-// const UNOD_ADD
 
 import mutations from './mutations-types';
 
 const actions = {
   [CREATE_NEW_WINDOW]({commit, getters}, { nameOfNewWindow }) {   
-    const activeWindowId = getters.activeWindowId;
+    const { activeWindow } = getters;
+    const undos = [];
 
-    commit(mutations.UNSET_ACTIVE_WINDOW, { id: activeWindowId });
+    if (activeWindow) {
+      commit(mutations.UNSET_ACTIVE_WINDOW, { id: activeWindow.id });
+      undos.push({
+        mutation: mutations.UNSET_ACTIVE_WINDOW,
+        payload: { id: activeWindow.id }
+      });
+    }
+
     commit(mutations.CREATE_NEW_WINDOW, { nameOfNewWindow });
-    commit(mutations.SET_ACTIVE_WINDOW, { id: getters.lastCreatedWindowId });
 
-    commit(mutations.ADD_UNDO, { 
-      undo: [
-        { type: UNDO_UNSET_ACTIVE_WINDOW, id: activeWindowId },
-        { type: UNDO_CREATE_NEW_WINDOW, id: getters.lastCreatedWindowId },
-        { type: UNDO_SET_ACTIVE_WINDOW, id: getters.lastCreatedWindowId }
-      ]
-    });
+    const newWindowId = getters.lastCreatedWindowId;
+    commit(mutations.SET_ACTIVE_WINDOW, { id: newWindowId });
+
+    undos.push( 
+      { 
+        mutation: mutations.CREATE_NEW_WINDOW, 
+        payload: { id: newWindowId },
+      },
+      { 
+        mutation: mutations.SET_ACTIVE_WINDOW, 
+        payload: { id: newWindowId }
+      }
+    )
+    
+    commit(mutations.PUSH_UNDO, { undo: undos });
+
+    if (!getters.isRedosEmpty) {
+      commit(mutations.CLEAR_REDOS);
+    }
   },
+  
+  [REMOVE_ACTIVE_WINDOW]({commit, getters}) {
+    const { activeWindow } = getters;
+
+    if (activeWindow) {
+      commit(mutations.UNSET_ACTIVE_WINDOW, { id: activeWindow.id  });
+      commit(mutations.REMOVE_WINDOW, { id: activeWindow.id }); 
+      
+      commit(mutations.PUSH_UNDO, { 
+        undo: [
+          { 
+            mutation: mutations.UNSET_ACTIVE_WINDOW, 
+            payload: { id: activeWindow.id },
+          },
+          { 
+            mutation: mutations.REMOVE_WINDOW, 
+            payload: { id: activeWindow.id }
+          },
+        ] 
+      });
+    }
+  },
+
+  async [SET_WINDOW_POSITION]({ commit }, { window, x, y }) {
+    return new Promise((resolve) => {
+      if (window && (window.x !== x || window.y !== y) ) {
+        const undo = {
+          mutation: mutations.SET_WINDOW_POSITION,
+          payload: { 
+            id: window.id, 
+            type: UNDO,
+            old: { x: window.x, y: window.y },
+            new: { x, y }
+          }
+        }
+        
+        commit(mutations.SET_WINDOW_POSITION, { 
+          id: window.id, 
+          x, 
+          y 
+        });
+
+        resolve(undo);
+      } else {
+        resolve(null);
+      }
+    })
+  },
+
+  async [SET_WINDOW_SIZE]({ commit }, { window, width, height }) {
+    return new Promise((resolve) => {
+      if (window.width !== width || window.height !== height) {
+        const undo = {
+          mutation: mutations.SET_WINDOW_SIZE,
+          payload: { 
+            id: window.id, 
+            type: UNDO,
+            old: { 
+              width: window.width, 
+              height: window.height 
+            },
+            new: { 
+              width,
+              height 
+            }
+          }
+        };
+        
+        commit(mutations.SET_WINDOW_SIZE, { 
+          id: window.id, 
+          width, 
+          height 
+        });
+
+        resolve(undo);
+      } else {
+        resolve(null);
+      }
+    })
+  },
+
+  async [SET_WINDOW_POSITION_SIZE]({ commit, dispatch, getters }, { id, x, y, width, height }) {
+    const window = getters.getWindowById(id);
+
+    if (window) {
+      const undos = [];
+
+      if (typeof x === 'number' && typeof y === 'number') {
+        const undo = await dispatch(SET_WINDOW_POSITION, { window, x, y });
+        if (undo) undos.push(undo);
+      }
+
+      if (typeof width === 'number' && typeof height === 'number') {
+        const undo = await dispatch(SET_WINDOW_SIZE, { window, width, height });
+        if (undo) undos.push(undo);
+      }
+      
+      if (undos.length) {
+        commit(mutations.PUSH_UNDO, { undo: undos });
+      }
+    }
+  },
+  
   [SET_ACTIVE_WINDOW]({commit, getters}, { id }) {
-    const activeWindow = getters.activeWindow;
+    const { activeWindow } = getters;
     const undo = [];
 
     if (activeWindow) {
@@ -46,112 +163,147 @@ const actions = {
       } 
 
       commit(mutations.UNSET_ACTIVE_WINDOW, { id: activeWindow.id });
-      undo.push({ type: UNDO_UNSET_ACTIVE_WINDOW, id: activeWindow.id })
+      undo.push({ 
+        mutation: mutations.UNSET_ACTIVE_WINDOW, 
+        payload: { id: activeWindow.id }
+      });
     } 
 
     commit(mutations.SET_ACTIVE_WINDOW, { id });
-    undo.push({ type: UNDO_SET_ACTIVE_WINDOW, id });
+    undo.push({ 
+      mutation: mutations.SET_ACTIVE_WINDOW, 
+      payload: { id } 
+    });
 
-    commit(mutations.ADD_UNDO, { undo });
+    commit(mutations.PUSH_UNDO, { undo });
   },
 
-  [REMOVE_ACTIVE_WINDOW]({commit, getters}) {
-    const { activeWindow } = getters;
 
-    if (activeWindow) {
-      commit(mutations.UNSET_ACTIVE_WINDOW, { id: activeWindow.id  });
-      commit(mutations.REMOVE_WINDOW, { id: activeWindow.id }); 
-      commit(mutations.ADD_UNDO, { 
-        undo: [
-          { type: UNDO_UNSET_ACTIVE_WINDOW, id: activeWindow.id },
-          { type: UNDO_REMOVE_WINDOW, id: activeWindow.id },
-        ] 
-      });
-    }
-  },
+  [PROCESS_UNDO_OR_REDO]({ commit }, { undoOrRedo }) {
+    return new Promise((resolve, reject) => {
+      if (Array.isArray(undoOrRedo) || typeof undoOrRedo === 'object') {
+        const undosOrRedos = Array.isArray(undoOrRedo) ? [...undoOrRedo] : [undoOrRedo];
+        const result = [];
+        
+        while (undosOrRedos.length) {
+          const { mutation, payload } = undosOrRedos.pop();
 
-  [UNDO]({commit, state, getters }) {
-    const undos = [...(getters.lastUndo || [])];
-
-    if (Array.isArray(undos) && undos.length) {
-      let redos = [];
-
-      while (undos.length) {
-        const undo = undos.pop();
-
-        switch(undo.type) {
-          case UNDO_CREATE_NEW_WINDOW: {
-            commit(mutations.REMOVE_WINDOW, { id: undo.id });
-
-            redos.push({ type: REDO_REMOVE_WINDOW, id: undo.id });
+          switch(mutation) {
+            case mutations.CREATE_NEW_WINDOW: {
+              commit(mutations.REMOVE_WINDOW, payload);
+              result.push({ mutation: mutations.REMOVE_WINDOW, payload });
+              
+              break;
+            }
             
-            break;
-          }
-          case UNDO_UNSET_ACTIVE_WINDOW: {
-            commit(mutations.SET_ACTIVE_WINDOW, { id: undo.id });
-
-            redos.push({ type: REDO_UNSET_ACTIVE_WINDOW, id: undo.id });
-        
-            break;
-          }
-          case UNDO_SET_ACTIVE_WINDOW: {
-            commit(mutations.UNSET_ACTIVE_WINDOW, { id: undo.id });
-
-            redos.push({ type: REDO_SET_ACTIVE_WINDOW, id: undo.id });
-        
-            break;
-          }
-          case UNDO_REMOVE_WINDOW: {
-            commit(mutations.RETURN_REMOVED_WINDOW, { id: undo.id });
-
-            redos.push({ type: REDO_REMOVE_WINDOW, id: undo.id });
-        
-            break;
-          }
-
-        }
-      }
-
-      commit(mutations.DELETE_LAST_UNDO);
-      commit(mutations.ADD_REDO, redos);
-    }
-  },
-  [REDO]({commit, state, getters}) {
-    const redos = [...(getters.lastRedo || [])];
-
-    if (Array.isArray(redos) && redos.length) {
-      let undos = [];
-
-      while (redos.length) {
-        const redo = redos.pop();
-
-        switch(redo.type) {
-          case REDO_CREATE_NEW_WINDOW: {
-            commit(mutations.RETURN_REMOVED_WINDOW, { id: redo.id });
-
-            undos.push({ type: UNDO_REMOVE_WINDOW, id: redo.id });
+            case mutations.UNSET_ACTIVE_WINDOW: {
+              commit(mutations.SET_ACTIVE_WINDOW, payload);
+              result.push({ mutation: mutations.SET_ACTIVE_WINDOW, payload });
+  
+              break;
+            }
             
-            break;
-          }
-          case REDO_UNSET_ACTIVE_WINDOW: {
-            commit(mutations.SET_ACTIVE_WINDOW, { id: redo.id });
+            case mutations.SET_ACTIVE_WINDOW: {
+              commit(mutations.UNSET_ACTIVE_WINDOW, payload);
+              result.push({ mutation: mutations.UNSET_ACTIVE_WINDOW, payload });
+          
+              break;
+            }
+          
+            case mutations.REMOVE_WINDOW: {
+              commit(mutations.RESTORE_WINDOW, payload);
+              result.push({ mutation: mutations.RESTORE_WINDOW, payload });
+          
+              break;
+            }
+            
+            case mutations.RESTORE_WINDOW: {
+              commit(mutations.REMOVE_WINDOW, payload);
+              result.push({ mutation: mutations.REMOVE_WINDOW, payload });
+  
+              break;
+            }
 
-            undos.push({ type: REDO_UNSET_ACTIVE_WINDOW, id: redo.id });
-        
-            break;
-          }
-          case REDO_SET_ACTIVE_WINDOW: {
-            commit(mutations.UNSET_ACTIVE_WINDOW, { id: redo.id });
+            case mutations.SET_WINDOW_POSITION: {
+              const { type, id, old: oldPos, new: newPos } = payload;
 
-            undos.push({ type: REDO_SET_ACTIVE_WINDOW, id: redo.id });
-        
-            break;
+              commit(mutations.SET_WINDOW_POSITION, {
+                id, 
+                x: type === UNDO ? oldPos.x : newPos.x, 
+                y: type === UNDO ? oldPos.y : newPos.y, 
+              });
+
+
+              result.push({ 
+                mutation: mutations.SET_WINDOW_POSITION, 
+                payload: {
+                  ...payload,
+                  type: type === UNDO ? REDO : UNDO
+                }
+              })
+
+              break;
+            }
+
+            case mutations.SET_WINDOW_SIZE: {
+              const { type, id, old: oldSize, new: newSize } = payload;
+
+              commit(mutations.SET_WINDOW_SIZE, {
+                id, 
+                width: type === UNDO ? oldSize.width : newSize.width, 
+                height: type === UNDO ? oldSize.height : newSize.height, 
+              });
+
+              result.push({ 
+                mutation: mutations.SET_WINDOW_SIZE, 
+                payload: {
+                  ...payload,
+                  type: type === UNDO ? REDO : UNDO
+                }
+              })
+
+              break;
+            }
           }
         }
+  
+        resolve(result);
       }
+  
+      reject(new Error("Type error"));
+    });
+  },
 
-      commit(mutations.DELETE_LAST_REDO);
-      commit(mutations.ADD_UNDO, undos);
+  async [UNDO]({commit, getters, dispatch }) {
+    const redo = await dispatch(PROCESS_UNDO_OR_REDO, { 
+      undoOrRedo: getters.lastUndo 
+    });
+
+    commit(mutations.POP_UNDO);
+    commit(mutations.PUSH_REDO, { redo } );
+
+  },
+  
+  async [REDO]({commit, getters, dispatch}) {
+    const undo = await dispatch(PROCESS_UNDO_OR_REDO, { 
+      undoOrRedo: getters.lastRedo 
+    });
+
+    commit(mutations.POP_REDO);
+    commit(mutations.PUSH_UNDO, { undo } );
+  },
+
+  [SAVE]({ commit, state, getters }) {
+    if (state.undos.length) {
+      commit(mutations.CLEAR_UNDOS);  
+    }
+
+    if (state.redos.length) {
+      commit(mutations.CLEAR_REDOS);
+    }
+
+    if (getters.numOfRemovedWindows) {
+      commit(mutations.DELETE_REMOVED_WINDOWS);
     }
   }
 }

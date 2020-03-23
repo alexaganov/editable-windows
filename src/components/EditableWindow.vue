@@ -13,6 +13,8 @@
     :initial-height="initialHeight"
     :min-x="minX"
     :min-y="minY"
+    :min-width="minWidth"
+    :min-height="minHeight"
     :resizers="resizers"
     @start-resizing="onStartResizing"
     @resizing="onResizing"
@@ -31,7 +33,6 @@
 
 <script>
 import Moveable from "./Moveable";
-import { SET_ACTIVE } from "../store/actions-types";
 
 export default {
   name: "EditableWindow",
@@ -63,25 +64,25 @@ export default {
   methods: {
     onStartDragging(data) {
       this.isDragging = true;
-      this.$emit("start-dragging", data);
+      this.$emit("start-dragging", this.id, data);
     },
     onDragging(data) {
-      this.$emit("dragging", data);
+      this.$emit("dragging", this.id, data);
     },
     onEndDragging(data) {
       this.isDragging = false;
-      this.$emit("end-dragging", data);
+      this.$emit("end-dragging", this.id, data);
     },
     onStartResizing(data) {
       this.isResizing = true;
-      this.$emit("start-resizing", data);
+      this.$emit("start-resizing", this.id, data);
     },
     onResizing(data) {
-      this.$emit("resizing", data);
+      this.$emit("resizing", this.id, data);
     },
     onEndResizing(data) {
       this.isResizing = false;
-      this.$emit("end-resizing", data);
+      this.$emit("end-resizing", this.id, data);
     }
   },
   data() {
@@ -110,11 +111,12 @@ export default {
     z-index: 100;
     border: 1px solid $text-color-primary;
     color: $text-color-primary;
+    box-shadow: 0 0 20px -5px $color-primary;
   }
 
-  &_is-dragging {
+  /* &_is-dragging {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-  }
+  } */
 
   &__controls {
     position: absolute;

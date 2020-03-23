@@ -1,7 +1,7 @@
 <template>
   <div class="editable-window-list">
     <div class="editable-window-list__scroll" ref="scroll">
-      <ul class="editable-window-list__list">
+      <transition-group tag="ul" name="fade" class="editable-window-list__list">
         <li
           class="editable-window-list__list-item"
           v-for="(listItem, index) in listOfWindows"
@@ -16,15 +16,15 @@
             @click="setActive(listItem.id)"
           >{{ listItem.name ? listItem.name : `Window ${index}` }}</button>
         </li>
-      </ul>
+      </transition-group>
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from "vuex";
-import { SET_ACTIVE_WINDOW } from "../store/actions-types";
 import { scrollToBottom } from "../halpers";
+import { SET_ACTIVE_WINDOW } from "../store/actions-types";
 
 export default {
   name: "EditableWindowList",
@@ -60,16 +60,30 @@ export default {
 
 .editable-window-list {
   background: $color-secondary;
-  border-radius: 2px;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  // box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
+
+  &:after {
+    position: absolute;
+    content: "";
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: inset 0 0 10px 0 rgba(0, 0, 0, 0.4);
+    // background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 30px),
+    // linear-gradient(0deg, rgba(0, 0, 0, 0.4), transparent 30px);
+    pointer-events: none;
+  }
 
   &__scroll {
     overflow-y: auto;
     height: 100%;
-    margin: 5px;
+    margin: 10px 5px;
   }
   &__list {
     list-style: none;
@@ -116,5 +130,15 @@ export default {
       box-shadow: 0 0 20px -5px $color-primary;
     }
   }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 1s;
+}
+.fade-enter,
+.fade-leave-to /* .list-leave-active below version 2.1.8 */ {
+  opacity: 0;
+  transform: translateY(30px);
 }
 </style>
