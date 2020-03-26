@@ -55,7 +55,7 @@ export default {
   min-width: 300px;
   padding: 15px 30px 30px 30px;
   background-color: $color-secondary-dark;
-  box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 -2px 10px rgba(0, 0, 0, 0.2);
   position: relative;
   z-index: 100;
   display: flex;
@@ -64,7 +64,7 @@ export default {
 
   &__main-controls {
     flex: 0 0 auto;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
   }
 
   &__editable-window-list {

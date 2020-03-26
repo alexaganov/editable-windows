@@ -2,56 +2,53 @@
   <nav class="main-controls">
     <ul class="main-controls__list">
       <li class="main-controls__item">
-        <button
+        <ControlButton
           class="main-controls__control"
           title="Save"
-          type="button"
           :disabled="isSaveBtnDisabled"
-          @click="onSave"
+          :handleClick="onSave"
         >
           <SaveIcon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
-        </button>
+        </ControlButton>
       </li>
       <li class="main-controls__item">
-        <button
+        <ControlButton
           class="main-controls__control main-controls__control-undo"
           title="Undo"
-          type="button"
           :disabled="isUndoBtnDisabled"
-          @click="onUndo"
+          :handleClick="onUndo"
         >
           <RotateCcwIcon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
-        </button>
+        </ControlButton>
       </li>
 
       <li class="main-controls__item">
-        <button
+        <ControlButton
           class="main-controls__control main-controls__control-redo"
           title="Redo"
-          type="button"
           :disabled="isRedoBtnDisabled"
-          @click="onRedo"
+          :handleClick="onRedo"
         >
           <RotateCwIcon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
-        </button>
+        </ControlButton>
       </li>
 
       <li class="main-controls__item">
-        <button
+        <ControlButton
           class="main-controls__control"
           title="Delete"
-          type="button"
           :disabled="isDeleteBtnDisabled"
-          @click="onDelete"
+          :handleClick="onDelete"
         >
           <Trash2Icon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
-        </button>
+        </ControlButton>
       </li>
     </ul>
   </nav>
 </template>
 
 <script>
+import ControlButton from "./ControlButton";
 import { SAVE, UNDO, REDO, REMOVE_ACTIVE_WINDOW } from "../store/actions-types";
 import {
   RotateCcwIcon,
@@ -65,7 +62,8 @@ export default {
     RotateCcwIcon,
     RotateCwIcon,
     SaveIcon,
-    Trash2Icon
+    Trash2Icon,
+    ControlButton
   },
   computed: {
     isSaveBtnDisabled() {
@@ -112,33 +110,6 @@ export default {
   &__item {
     &:not(:last-child) {
       margin-right: 8px;
-    }
-  }
-
-  &__control {
-    $parent: &;
-
-    padding: 0.5em;
-    cursor: pointer;
-    background-color: transparent;
-    border: none;
-    color: $color-primary;
-    transition: 0.4s all ease;
-    filter: drop-shadow(0px 0px 10px $color-primary);
-
-    &:not(:disabled):active {
-      // transform: scale(0.8);
-      filter: drop-shadow(0px 0px 5px $color-primary);
-    }
-
-    &:focus {
-      outline: none;
-    }
-
-    &:disabled {
-      cursor: default;
-      color: $color-primary-dark;
-      filter: none;
     }
   }
 

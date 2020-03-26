@@ -25,7 +25,11 @@
     :title="name"
   >
     <div class="editable-window__content">
-      <div class="editable-window__header"></div>
+      <div class="editable-window__header">
+        <ControlButton title="Edit">
+          <EditIcon size="2x" stroke-width="1" />
+        </ControlButton>
+      </div>
       <div class="editable-window__body">{{ this.content }}</div>
     </div>
   </Moveable>
@@ -33,11 +37,15 @@
 
 <script>
 import Moveable from "./Moveable";
+import ControlButton from "./ControlButton";
+import { EditIcon } from "vue-feather-icons";
 
 export default {
   name: "EditableWindow",
   components: {
-    Moveable
+    Moveable,
+    ControlButton,
+    EditIcon
   },
   props: {
     tag: String,
@@ -102,9 +110,9 @@ export default {
   display: inline-block;
   border: 1px solid $color-primary-dark;
   border-radius: 2px;
-  transition: box-shadow 0.2s;
-  background-color: $color-secondary-dark;
+  background-color: $color-secondary;
   color: $text-color-primary-dark;
+  transition: box-shadow 0.5s, border 0.5s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 
   &_is-active {
@@ -114,23 +122,41 @@ export default {
     box-shadow: 0 0 20px -5px $color-primary;
   }
 
-  /* &_is-dragging {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-  } */
+  &_is-resizing,
+  &_is-dragging {
+    // transition: none;
+  }
 
-  &__controls {
+  &_is-resizing {
+    // transition: width 0s, height 0s;
+  }
+
+  &__header {
+    z-index: 100;
     position: absolute;
-    width: 100%;
-    height: 100%;
     top: 0;
-    left: 0;
+    right: 0;
+    padding: 5px;
+    pointer-events: all;
+    opacity: 0;
+    transition: all 0.2s;
+  }
+
+  &_is-active:hover &__header {
+    opacity: 1;
   }
 
   &__content {
-    user-select: none;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+  }
+
+  &__body {
+    width: 100%;
+    height: 100%;
   }
 }
 </style>

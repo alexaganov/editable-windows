@@ -1,16 +1,19 @@
 $gray: #252525;
 $dark-gray: #191919;
-$light-gray: #424242;
+$darker-gray: #101010;
+$light-gray: #494949;
 $dark-green: #366d52;
 $green: #5ac792;
 
 $color-primary: $green;
 $color-primary-dark: $dark-green;
-$color-secondary: $gray;
-$color-secondary-dark: $dark-gray;
+$color-secondary: $dark-gray;
+$color-secondary-dark: $darker-gray;
 $color-secondary-light: $light-gray;
 
 $text-color-primary: $color-primary;
 $text-color-primary-dark: $color-primary-dark;
 $text-color-secondary: $color-secondary-dark;
 $text-color-tertiary: $color-secondary-light;
+
+$small-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);

@@ -1,7 +1,7 @@
 <template>
   <div class="editable-window-list">
     <div class="editable-window-list__scroll" ref="scroll">
-      <transition-group tag="ul" name="fade" class="editable-window-list__list">
+      <transition-group tag="ul" name="show" class="editable-window-list__list">
         <li
           class="editable-window-list__list-item"
           v-for="(listItem, index) in listOfWindows"
@@ -23,13 +23,16 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { scrollToBottom } from "../halpers";
+import { scrollToBottom } from "../helpers";
 import { SET_ACTIVE_WINDOW } from "../store/actions-types";
 
 export default {
   name: "EditableWindowList",
   computed: {
-    ...mapGetters(["listOfWindows"])
+    ...mapGetters(["listOfWindows"]),
+    scrollHeight() {
+      return this.$refs.scroll.scrollHeight - this.$refs.scroll.clientHeight;
+    }
   },
   watch: {
     listOfWindows(newListOfWindows, oldListOfWindows) {
@@ -39,7 +42,10 @@ export default {
   },
   updated() {
     if (this.shouldScrollToBottom) {
-      scrollToBottom(this.$refs.scroll);
+      setTimeout(() => {
+        scrollToBottom(this.$refs.scroll);
+      }, 50);
+      // this.$nextTick(() => {});
     }
   },
   methods: {
@@ -60,30 +66,30 @@ export default {
 
 .editable-window-list {
   background: $color-secondary;
-  border-radius: 5px;
-  // box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
+  box-shadow: $small-shadow;
+  border-radius: 2px;
 
-  &:after {
+  /* &:after {
     position: absolute;
     content: "";
     left: 0;
     top: 0;
     right: 0;
     bottom: 0;
-    box-shadow: inset 0 0 10px 0 rgba(0, 0, 0, 0.4);
+    // box-shadow: inset 0 0 10px 0 rgba(0, 0, 0, 0.4);
     // background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 30px),
     // linear-gradient(0deg, rgba(0, 0, 0, 0.4), transparent 30px);
     pointer-events: none;
-  }
+  } */
 
   &__scroll {
     overflow-y: auto;
     height: 100%;
-    margin: 10px 5px;
+    margin: 5px;
   }
   &__list {
     list-style: none;
@@ -92,13 +98,31 @@ export default {
     margin: 15px;
   }
 
-  &__list-item:not(:last-child) {
-    margin-bottom: 8px;
+  &__list-item {
+    &.show-enter-active,
+    &.show-leave-active {
+      overflow: hidden;
+      max-height: 100px;
+    }
+
+    &.show-enter,
+    &.show-leave-to {
+      max-height: 0px;
+      transition: all 0.4s;
+    }
+
+    &.show-enter &-btn,
+    &.show-leave-to &-btn {
+      transition: all 0.2s;
+      opacity: 0;
+      transform: scale(0.9);
+    }
   }
 
   &__list-item-btn {
     cursor: pointer;
     width: 100%;
+    margin: 5px 0;
     border: 0;
     background-color: $color-primary-dark;
     color: $text-color-secondary;
@@ -130,15 +154,5 @@ export default {
       box-shadow: 0 0 20px -5px $color-primary;
     }
   }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 1s;
-}
-.fade-enter,
-.fade-leave-to /* .list-leave-active below version 2.1.8 */ {
-  opacity: 0;
-  transform: translateY(30px);
 }
 </style>

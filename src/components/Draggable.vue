@@ -72,38 +72,38 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
 .draggable {
+  $draggable: &;
   position: absolute;
   box-sizing: content-box;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  user-select: all;
-}
-
-.draggable_is-dragging {
-  z-index: 30;
-}
-
-.draggable_debug {
-  background-color: rgba(82, 255, 180, 0.5);
-}
-
-.draggable_debug .draggable__dragger {
-  border: 1px solid #000;
-  background-color: rgba(255, 82, 82, 0.5);
-}
-
-.draggable_is-dragging .draggable__dragger {
-  cursor: move;
-}
-
-.draggable__dragger {
-  width: 100%;
-  height: 100%;
   z-index: 10;
-  position: relative;
+
+  &__dragger {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  &_is-dragging {
+    z-index: 40;
+
+    #{$draggable}__dragger {
+      cursor: move;
+    }
+  }
+
+  &_debug {
+    background-color: rgba(82, 255, 180, 0.5);
+
+    #{$draggable}__dragger {
+      border: 1px solid #000;
+      background-color: rgba(255, 82, 82, 0.5);
+    }
+  }
 }
 </style>

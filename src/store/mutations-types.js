@@ -6,7 +6,7 @@ export const DELETE_REMOVED_WINDOWS = 'DELETE_REMOVED_WINDOWS';
 export const SET_WINDOW_POSITION    = 'SET_WINDOW_POSITION';
 export const SET_WINDOW_SIZE        = 'SET_WINDOW_SIZE';
 export const SET_ACTIVE_WINDOW      = 'SET_ACTIVE_WINDOW';
-export const UNSET_ACTIVE_WINDOW      = 'UNSET_ACTIVE_WINDOW';
+export const UNSET_ACTIVE_WINDOW    = 'UNSET_ACTIVE_WINDOW';
 
 export const PUSH_UNDO              = 'PUSH_UNDO';
 export const PUSH_REDO              = 'PUSH_REDO';

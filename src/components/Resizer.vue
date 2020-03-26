@@ -195,79 +195,79 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
+@use "sass:map";
+
 .resizer {
+  $parent: &;
+
   position: absolute;
   box-sizing: content-box;
-  pointer-events: all;
-}
 
-.resizer_debug {
-  background-color: rgba(82, 255, 180, 0.5);
-}
+  &_debug {
+    background-color: rgba(82, 255, 180, 0.5);
 
-.resizer_debug .resizer__control {
-  border: 1px solid #000;
-  background-color: rgba(255, 82, 82, 0.5);
-}
+    #{$parent}__control {
+      border: 1px solid #000;
+      background-color: rgba(255, 82, 82, 0.5);
+    }
+  }
 
-.resizer_line-top,
-.resizer_line-bottom {
-  width: 100%;
-}
+  &_line-top,
+  &_line-bottom {
+    width: 100%;
+  }
 
-.resizer_line-left,
-.resizer_line-right {
-  height: 100%;
-}
+  &_line-left,
+  &_line-right {
+    height: 100%;
+  }
 
-.resizer_line-top,
-.resizer_line-bottom,
-.resizer_line-left,
-.resizer_line-right {
-  z-index: 10;
-}
+  $resizerTypes: (
+    lines: (
+      line-top: n-resize,
+      line-right: e-resize,
+      line-bottom: s-resize,
+      line-left: w-resize
+    ),
+    points: (
+      point-top-left: nwse-resize,
+      point-top-right: nesw-resize,
+      point-bottom-right: nwse-resize,
+      point-bottom-left: nesw-resize
+    )
+  );
 
-.resizer_point-top-left,
-.resizer_point-top-right,
-.resizer_point-bottom-left,
-.resizer_point-bottom-right {
-  z-index: 20;
-}
+  @at-root %line-resizer-z-index {
+    z-index: 10;
+  }
 
-.resizer_is-resizing {
-  z-index: 30;
-}
+  @at-root %point-resizer-z-index {
+    z-index: 20;
+  }
 
-.resizer_line-top {
-  cursor: n-resize;
-}
+  @each $lineResizer in map.keys(map.get($resizerTypes, "lines")) {
+    &_#{$lineResizer} {
+      @extend %line-resizer-z-index;
+    }
+  }
 
-.resizer_line-bottom {
-  cursor: s-resize;
-}
+  @each $pointResizer in map.keys(map.get($resizerTypes, "points")) {
+    @at-root &_#{$pointResizer} {
+      @extend %point-resizer-z-index;
+    }
+  }
 
-.resizer_line-left {
-  cursor: w-resize;
-}
+  &_is-resizing {
+    z-index: 30;
+  }
 
-.resizer_line-right {
-  cursor: e-resize;
-}
-
-.resizer_point-top-left {
-  cursor: nwse-resize;
-}
-
-.resizer_point-top-right {
-  cursor: nesw-resize;
-}
-
-.resizer_point-bottom-left {
-  cursor: nesw-resize;
-}
-
-.resizer_point-bottom-right {
-  cursor: nwse-resize;
+  @each $type, $resizers in $resizerTypes {
+    @each $resizer, $cursor in $resizers {
+      &_#{$resizer} {
+        cursor: $cursor;
+      }
+    }
+  }
 }
 </style>

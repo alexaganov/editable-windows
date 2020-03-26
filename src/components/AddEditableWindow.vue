@@ -51,13 +51,13 @@ export default {
   &__input {
     width: 100%;
     border: 0;
-    border-radius: 5px;
+    border-radius: 2px;
     background-color: $color-secondary;
     margin-right: 15px;
     font-size: 0.875em;
     padding: 0.8em 1.2em;
     color: $text-color-primary;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+    box-shadow: $small-shadow;
 
     &::placeholder {
       color: $color-secondary-light;
@@ -72,8 +72,8 @@ export default {
   &__submit-btn {
     cursor: pointer;
     color: $color-secondary-dark;
-    border-radius: 5px;
-    // border: 1px solid $color-primary;
+    border-radius: 2px;
+    box-shadow: $small-shadow;
     border: 0;
     padding: 0 0.6em;
     background: $color-primary-dark;
@@ -86,7 +86,6 @@ export default {
     &:hover {
       background: $color-primary;
       box-shadow: 0 0 20px -5px $color-primary;
-      // color: $color-secondary-dark;
     }
   }
 

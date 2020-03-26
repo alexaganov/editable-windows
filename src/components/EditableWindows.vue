@@ -1,6 +1,7 @@
 <template>
-  <transition-group tag="ul" class="editable-windows">
+  <transition-group tag="ul" class="editable-windows" name="show">
     <EditableWindow
+      class="editable-windows__editable-window"
       tag="li"
       v-for="(window, index) in windows"
       v-show="!window.isRemoved"
@@ -88,7 +89,7 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
 .editable-windows {
   position: absolute;
   width: 100%;
@@ -96,5 +97,17 @@ export default {
   top: 0;
   left: 0;
   overflow: auto;
+
+  &__editable-window {
+    &.show-enter-active,
+    &.show-leave-active {
+      transition: all 0.2s;
+    }
+
+    &.show-enter,
+    &.show-leave-to {
+      opacity: 0;
+    }
+  }
 }
 </style>

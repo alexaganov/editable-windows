@@ -41,17 +41,17 @@ const mutations = {
     state.windows.push(newWindow);
   },
   [REMOVE_WINDOW](state, { id }) {
-    const removedWindow = findWindowById(state, id);
+    const window = findWindowById(state, id);
 
-    if (removedWindow) {
-      removedWindow.isRemoved = true;
+    if (window) {
+      window.isRemoved = true;
     }
   },
   [RESTORE_WINDOW](state, { id }) {
-    const removedWindow = findWindowById(state, id);
+    const window = findWindowById(state, id);
 
-    if (removedWindow) {
-      removedWindow.isRemoved = false;
+    if (window) {
+      window.isRemoved = false;
     }
   },
   [DELETE_REMOVED_WINDOWS](state) {

@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import { getArrayWithoutDuplicates } from "../halpers";
+import { getArrayWithoutDuplicates } from "../helpers";
 import Resizer from "./Resizer";
 
 import {
@@ -108,10 +108,9 @@ export default {
   position: absolute;
   left: 0;
   top: 0;
-  bottom: 0;
-  right: 0;
   width: 100%;
   height: 100%;
+  pointer-events: all;
 
   &__resizers {
     position: absolute;

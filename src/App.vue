@@ -2,18 +2,21 @@
   <div id="app">
     <Sidebar />
     <Content />
+    <ModalEditWindow />
   </div>
 </template>
 
 <script>
 import Content from "./components/Content";
 import Sidebar from "./components/Sidebar";
+import ModalEditWindow from "./components/ModalEditWindow";
 
 export default {
   name: "App",
   components: {
     Sidebar,
-    Content
+    Content,
+    ModalEditWindow
   },
   mounted: function() {}
 };
@@ -21,16 +24,31 @@ export default {
 
 <style lang="scss">
 @import "~@/scss/variables";
+@import url("https://fonts.googleapis.com/css?family=Roboto:300,400,700&display=swap");
+
+body {
+  background-color: $color-secondary;
+  max-height: 100vh;
+  height: 100vh;
+}
+
+input,
+button {
+  font-family: inherit;
+}
+
+img {
+  width: 100%;
+  max-width: 100%;
+}
 
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Roboto", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #000;
-  height: 100vh;
-  max-height: 100vh;
+  height: 100%;
   display: flex;
-  background-color: $color-secondary;
   overflow: hidden;
 }
 

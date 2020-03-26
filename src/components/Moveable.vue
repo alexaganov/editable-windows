@@ -25,9 +25,7 @@
         :debug="debug"
       />
     </div>
-    <div class="moveable__content">
-      <slot></slot>
-    </div>
+    <slot></slot>
   </component>
 </template>
 
@@ -353,7 +351,8 @@ export default {
 .moveable {
   position: absolute;
 
-  &__controllers {
+  &__controllers,
+  &__content {
     position: absolute;
     top: 0;
     left: 0;

@@ -1,3 +1,5 @@
+import { TEXT } from './content-types';
+
 const state = {
   lastCreatedWindowId: -1,
 
@@ -11,7 +13,10 @@ const state = {
   windowsInitialHeight: 200,
   windowsMinWidth: 100,
   windowsMinHeight: 100,
-  windowsInitialContent: 'Empty'
+  windowsInitialContent: {
+    type: TEXT,
+    content: ''
+  }
 };
 
 export default state;
