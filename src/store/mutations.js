@@ -8,6 +8,7 @@ import {
   SET_WINDOW_SIZE,
   SET_ACTIVE_WINDOW,
   UNSET_ACTIVE_WINDOW,
+  SET_WINDOW_CONTENT,
   
   PUSH_UNDO,
   PUSH_REDO,
@@ -15,6 +16,9 @@ import {
   POP_REDO,
   CLEAR_UNDOS,
   CLEAR_REDOS,
+
+  SHOW_EDIT_MODAL,
+  HIDE_EDIT_MODAL,
 } from './mutations-types';
 
 const findWindowById = (state, id) => {
@@ -27,15 +31,9 @@ const mutations = {
   [CREATE_NEW_WINDOW](state, { nameOfNewWindow }) {
     const newWindowId = ++state.lastCreatedWindowId;
     const newWindow = {
+      ...state.initialWindow,
       id: newWindowId,
-      x: state.windowsInitialX,
-      y: state.windowsInitialY,
       name: nameOfNewWindow ? nameOfNewWindow : `Window ${newWindowId}`,
-      width: state.windowsInitialWidth,
-      height: state.windowsInitialHeight,
-      content: state.windowsInitialContent,
-      isActive: false,
-      isRemoved: false,
     };
 
     state.windows.push(newWindow);
@@ -92,12 +90,30 @@ const mutations = {
     }
   }, 
 
+  [SET_WINDOW_CONTENT](state, { id, content }) {
+    const window = findWindowById(state, id);
+
+    if (window) {
+      window.content = { ...content };
+    }
+  },
+
   [PUSH_UNDO](state, { undo }) { state.undos.push(undo); },
   [PUSH_REDO](state, { redo }) { state.redos.push(redo); },
   [POP_UNDO](state) { state.undos.pop(); },
   [POP_REDO](state) { state.redos.pop(); },
   [CLEAR_UNDOS](state) { state.undos = []; },
   [CLEAR_REDOS](state) { state.redos = []; },
+
+  [HIDE_EDIT_MODAL](state) { state.editModal.isShown = false},
+  [SHOW_EDIT_MODAL](state, { id }) { 
+    const window = findWindowById(state, id);
+
+    if (window) {
+      state.editModal.window = window;
+      state.editModal.isShown = true
+    }
+  }
 }
 
 export default mutations;

@@ -1,22 +1,22 @@
 <template>
   <div class="file-uploader">
-    <div v-show="isPreview" class="file-uploader__preview">
-      <img
-        class="file-uploader__preview-image"
-        v-if="file && accept === 'image'"
-        :src="file.src"
-        :alt="file.name"
+    <label
+      @drag.stop.prevent
+      @dragstart.stop.prevent
+      @dragenter.stop.prevent
+      @dragover.stop.prevent
+      @dragleave.stop.prevent
+      @drop.stop.prevent="onChange"
+      class="file-uploader__uploader"
+    >
+      <input
+        @change="onChange"
+        :accept="accept"
+        :multiple="multiple"
+        type="file"
+        class="file-uploader__input"
       />
-      <video
-        class="file-uploader__preview-video"
-        v-else-if="file && accept === 'video'"
-        :src="file.src"
-        :alt="file.name"
-      />
-    </div>
-    <label class="file-uploader__uploader">
-      <input @change="onChange" type="file" class="file-uploader__input" />
-      <slot>Choose or drop file here</slot>
+      <slot>Choose or drop {{ accept }} here</slot>
     </label>
   </div>
 </template>
@@ -25,38 +25,40 @@
 export default {
   name: "FileUploader",
   props: {
-    accept: {
-      type: [String, Array],
-      default: "image",
-      validator(accept) {
-        return ["", "image", "video"].indexOf(accept) !== -1;
-      }
-    }
+    accept: String,
+    multiple: Boolean
   },
   methods: {
     onChange(e) {
-      const { files } = e.target;
+      const { files } = e.type === "drop" ? e.dataTransfer : e.target;
 
       if (files.length) {
-        const file = files[0];
+        if (this.multiple) {
+          this.$emit(
+            "upload",
+            files.map(file => {
+              const [type] = file.type.split("/");
 
-        this.file = {
-          name: file.name,
-          src: URL.createObjectURL(file)
-        };
+              return {
+                type,
+                name: file.name,
+                src: URL.createObjectURL(file)
+              };
+            })
+          );
+        } else {
+          const currentFile = files[0];
+          const [type] = currentFile.type.split("/");
+          const file = {
+            type,
+            name: currentFile.name,
+            src: URL.createObjectURL(currentFile)
+          };
 
-        this.isPreview = true;
-      } else {
-        this.isPreview = false;
-        this.file = null;
+          this.$emit("upload", file);
+        }
       }
     }
-  },
-  data() {
-    return {
-      file: null,
-      isPreview: false
-    };
   }
 };
 </script>
@@ -66,14 +68,11 @@ export default {
 
 .file-uploader {
   display: flex;
-
-  &__preview {
-    margin-right: 15px;
-  }
+  height: inherit;
 
   &__preview,
   &__uploader {
-    flex: 1 1 50%;
+    flex: 1 1 100%;
     height: inherit;
     overflow: hidden;
     border-radius: 5px;

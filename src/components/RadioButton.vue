@@ -8,7 +8,7 @@
         @change="onChange"
         class="radio-button__input"
       />
-      <span class="radio-button__label">{{label}}</span>
+      <span class="radio-button__label">{{ label }}</span>
     </label>
   </li>
 </template>
@@ -21,7 +21,7 @@ export default {
     value: [String, Number],
     checked: Boolean,
     label: String,
-    initialName: String
+    name: String
   },
   model: {
     prop: "selected",
@@ -46,11 +46,6 @@ export default {
     onChange() {
       this.$emit("change", this.value);
     }
-  },
-  data() {
-    return {
-      name: this.initialName
-    };
   }
 };
 </script>

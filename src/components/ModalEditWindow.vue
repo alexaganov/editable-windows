@@ -1,50 +1,70 @@
 <template>
-  <Modal class="edit-window-modal" v-model="show">
+  <Modal class="edit-window-modal" v-model="isShown">
     <div class="edit-window-modal__content">
       <div class="edit-window-modal__header">
         <h2 class="edit-window-modal__title">Edit window form</h2>
-        <Button class="edit-window-modal__close-button" variant="icon">
+        <Button @click="close" class="edit-window-modal__close-button" variant="icon">
           <XIcon />
         </Button>
       </div>
       <div class="edit-window-modal__body">
-        <RadioButtonGroup name="content-type" class="edit-window-modal__radio-button-group">
+        <RadioButtonGroup class="edit-window-modal__radio-button-group">
           <RadioButton
-            v-for="(contentType, label, index) in contentTypes"
+            name="content-type"
+            v-for="contentType in contentTypes"
             :key="contentType"
-            :value="index"
-            :label="label"
+            :value="contentType"
+            :label="contentType"
             v-model="currentContentType"
           />
         </RadioButtonGroup>
         <div class="edit-window-modal__edit-area">
           <TextArea
             class="edit-window-modal__text-area"
-            v-if="currentContentType === contentTypes['Text']"
+            v-if="currentContentType === contentTypes.TEXT"
+            v-model="text"
           />
-          <FileUploader
-            @drop="onUploadFile"
-            class="edit-window-modal__file-uploader"
-            v-if="currentContentType === contentTypes['Image'] || currentContentType === contentTypes['Video']"
-          >
-            <div class="edit-window-modal__file-uploader-inner">
-              <span class="edit-window-modal__file-uploader-icon">
-                <ImageIcon
-                  v-if="currentContentType === contentTypes['Image']"
-                  size="2x"
-                  stroke-width="1"
-                />
-                <FilmIcon v-else size="2x" stroke-width="1" />
-              </span>
-              <p class="edit-window-modal__description">Choose or Drop file here</p>
-            </div>
-          </FileUploader>
+          <div v-else class="edit-window-modal__file-area">
+            <FilePreview
+              :src="currentFile.src"
+              :name="currentFile.name"
+              :type="currentFile.type"
+              class="edit-window-modal__file-preview"
+            />
+            <FileUploader
+              :accept="currentContentType === contentTypes.IMAGE ? 'image/*': 'video/*'"
+              @upload="onUpload"
+              class="edit-window-modal__file-uploader"
+            >
+              <div class="edit-window-modal__file-uploader-inner">
+                <span class="edit-window-modal__file-uploader-icon">
+                  <ImageIcon
+                    v-show="currentContentType === contentTypes.IMAGE"
+                    size="2x"
+                    stroke-width="1"
+                  />
+                  <FilmIcon
+                    v-show="currentContentType === contentTypes.VIDEO"
+                    size="2x"
+                    stroke-width="1"
+                  />
+                </span>
+                <p class="edit-window-modal__description">
+                  Choose or Drop
+                  {{
+                  currentContentType === contentTypes.IMAGE ? "image" : "video"
+                  }}
+                  here
+                </p>
+              </div>
+            </FileUploader>
+          </div>
         </div>
       </div>
       <div class="edit-window-modal__footer">
-        <ButtonGroup>
-          <Button>Close</Button>
-          <Button variant="solid">Accept</Button>
+        <ButtonGroup v-once>
+          <Button @click="close">Close</Button>
+          <Button @click="accept" variant="solid">Accept</Button>
         </ButtonGroup>
       </div>
     </div>
@@ -58,7 +78,10 @@ import RadioButton from "./RadioButton";
 import RadioButtonGroup from "./RadioButtonGroup";
 import TextArea from "./TextArea";
 import FileUploader from "./FileUploader";
+import FilePreview from "./FilePreview";
 import ButtonGroup from "./ButtonGroup";
+import { HIDE_EDIT_MODAL } from "../store/mutations-types";
+import { SET_WINDOW_CONTENT } from "../store/actions-types";
 import { TEXT, IMAGE, VIDEO } from "../store/content-types";
 import { ImageIcon, XIcon, FilmIcon } from "vue-feather-icons";
 
@@ -74,25 +97,87 @@ export default {
     RadioButtonGroup,
     TextArea,
     FileUploader,
+    FilePreview,
     ButtonGroup,
     XIcon,
     ImageIcon,
     FilmIcon
   },
+  computed: {
+    modalInfo() {
+      return this.$store.getters.editModalInfo;
+    },
+    isShown: {
+      set() {
+        this.close();
+      },
+      get() {
+        return this.modalInfo.isShown;
+      }
+    },
+    content() {
+      return this.modalInfo.content;
+    }
+  },
+  watch: {
+    currentContentType(newCurrentContentType) {
+      switch (newCurrentContentType) {
+        case this.contentTypes.IMAGE:
+          this.currentFile = this.image;
+          break;
+        case this.contentTypes.VIDEO:
+          this.currentFile = this.video;
+          break;
+      }
+    }
+  },
   methods: {
-    onUploadFile(e) {
-      console.log(e);
+    onUpload(file) {
+      switch (file.type) {
+        case this.contentTypes.IMAGE:
+          this.image = file;
+          break;
+        case this.contentTypes.VIDEO:
+          this.video = file;
+          break;
+      }
+
+      this.currentFile = file;
+    },
+    close() {
+      this.$store.commit(HIDE_EDIT_MODAL);
+    },
+    accept() {
+      const { window } = this.modalInfo;
+
+      const content = {
+        type: this.currentContentType,
+        data:
+          this.currentContentType === this.contentTypes.TEXT
+            ? this.text
+            : this.currentFile
+      };
+
+      this.currentFile = this.image = this.video = {};
+
+      this.$store.dispatch(SET_WINDOW_CONTENT, {
+        window,
+        content
+      });
     }
   },
   data() {
     return {
       contentTypes: {
-        Text: TEXT,
-        Image: IMAGE,
-        Video: VIDEO
+        TEXT,
+        IMAGE,
+        VIDEO
       },
       currentContentType: TEXT,
-      show: true
+      currentFile: {},
+      image: {},
+      video: {},
+      text: ""
     };
   }
 };
@@ -115,6 +200,19 @@ export default {
     position: relative;
   }
 
+  &__body {
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__footer {
+    border-top: 1px solid $color-secondary;
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 30px 20px 30px;
+  }
+
   &__close-button {
     position: absolute;
     top: 5px;
@@ -129,32 +227,34 @@ export default {
     text-shadow: 0 0 10px $color-primary;
     letter-spacing: 2px;
     position: relative;
-    /* 
-    &:after {
-      content: "";
-      width: 2.5em;
-      height: 3px;
-      left: 0;
-      bottom: -1em;
-      display: block;
-      margin-top: 8px;
-      background-color: $color-primary;
-      box-shadow: 0 0 10px $color-primary;
-    } */
   }
 
-  &__body {
-    padding: 20px 30px;
-    display: flex;
-    flex-direction: column;
+  &__radio-button-group {
+    align-self: center;
+    width: 100%;
+    margin-bottom: 20px;
   }
 
   &__edit-area {
     height: 10em;
   }
 
-  &__file-uploader {
+  &__text-area,
+  &__file-area {
     height: 100%;
+  }
+
+  &__file-area {
+    display: flex;
+  }
+
+  &__file-preview {
+    margin-right: 20px;
+  }
+
+  &__file-preview,
+  &__file-uploader {
+    flex: 1 1 100%;
   }
 
   &__file-uploader-inner {
@@ -177,12 +277,6 @@ export default {
     }
   }
 
-  &__radio-button-group {
-    align-self: center;
-    width: 100%;
-    margin-bottom: 20px;
-  }
-
   &__file-uploader-icon {
     display: inline-block;
     margin-bottom: 0.3em;
@@ -190,22 +284,6 @@ export default {
 
   &__file-uploader-inner:hover &__file-uploader-icon {
     filter: drop-shadow(0px 0px 10px $color-primary);
-  }
-
-  &__text-area {
-    height: 100%;
-  }
-
-  &__footer {
-    border-top: 1px solid $color-secondary;
-    display: flex;
-    justify-content: flex-end;
-    padding: 15px 30px 20px 30px;
-  }
-
-  &__subtitle {
-    color: $color-primary-dark;
-    font-size: 1.5em;
   }
 }
 </style>

@@ -3,7 +3,7 @@
     <EditableWindow
       class="editable-windows__editable-window"
       tag="li"
-      v-for="(window, index) in windows"
+      v-for="window in windows"
       v-show="!window.isRemoved"
       :key="window.id"
       :id="window.id"
@@ -11,15 +11,16 @@
       :initial-y="window.y"
       :initial-width="window.width"
       :initial-height="window.height"
-      :name="window.name ? window.name : `Window ${index}`"
+      :name="window.name"
       :is-active="window.isActive"
       :content="window.content"
       :min-x="minX"
       :max-x="maxX"
       :min-y="minY"
       :max-y="maxY"
-      :min-width="windowsMinWidth"
-      :min-height="windowsMinHeight"
+      :min-width="window.minWidth"
+      :min-height="window.minHeight"
+      @edit="onEdit"
       @start-dragging="onStartDragging"
       @end-dragging="onEndDragging"
       @start-resizing="onStartResizing"
@@ -30,11 +31,11 @@
 
 <script>
 import EditableWindow from "./EditableWindow";
-import { mapGetters } from "vuex";
 
 import {
   SET_ACTIVE_WINDOW,
-  SET_WINDOW_POSITION_SIZE
+  SET_WINDOW_POSITION_SIZE,
+  EDIT_WINDOW
 } from "../store/actions-types";
 
 export default {
@@ -43,9 +44,11 @@ export default {
     EditableWindow
   },
   computed: {
-    ...mapGetters(["windows", "windowsMinWidth", "windowsMinHeight"])
+    windows() {
+      return this.$store.getters.windows;
+    }
   },
-  mounted: function() {
+  mounted() {
     this.maxX = this.$el.offsetWidth;
     this.maxY = this.$el.offsetHeight;
 
@@ -73,12 +76,15 @@ export default {
     onResize() {
       this.maxX = this.$el.offsetWidth;
       this.maxY = this.$el.offsetHeight;
+    },
+    onEdit(id) {
+      this.$store.dispatch(EDIT_WINDOW, { id });
     }
   },
-  destroyed: function() {
+  destroyed() {
     window.removeEventListener("resize", this.onResize);
   },
-  data: function() {
+  data() {
     return {
       minX: 0,
       maxX: 0,

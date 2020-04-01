@@ -7,6 +7,7 @@
           v-for="(listItem, index) in listOfWindows"
           v-show="!listItem.isRemoved"
           :key="listItem.id"
+          :ref="listItem.isActive ? 'active' : null"
         >
           <button
             class="editable-window-list__list-item-btn"
@@ -22,30 +23,21 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import { scrollToBottom } from "../helpers";
+import { scrollToBottom, scrollToElem } from "../helpers";
 import { SET_ACTIVE_WINDOW } from "../store/actions-types";
 
 export default {
   name: "EditableWindowList",
   computed: {
-    ...mapGetters(["listOfWindows"]),
-    scrollHeight() {
-      return this.$refs.scroll.scrollHeight - this.$refs.scroll.clientHeight;
-    }
-  },
-  watch: {
-    listOfWindows(newListOfWindows, oldListOfWindows) {
-      this.shouldScrollToBottom =
-        newListOfWindows.length > oldListOfWindows.length;
+    listOfWindows() {
+      return this.$store.getters.listOfUnremovedWindows;
     }
   },
   updated() {
-    if (this.shouldScrollToBottom) {
-      setTimeout(() => {
-        scrollToBottom(this.$refs.scroll);
-      }, 50);
-      // this.$nextTick(() => {});
+    const active = this.$refs.active[0] ? this.$refs.active[0] : null;
+
+    if (active) {
+      scrollToElem(this.$refs.scroll, active);
     }
   },
   methods: {
@@ -72,20 +64,6 @@ export default {
   position: relative;
   box-shadow: $small-shadow;
   border-radius: 2px;
-
-  /* &:after {
-    position: absolute;
-    content: "";
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    // box-shadow: inset 0 0 10px 0 rgba(0, 0, 0, 0.4);
-    // background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 30px),
-    // linear-gradient(0deg, rgba(0, 0, 0, 0.4), transparent 30px);
-    pointer-events: none;
-  } */
-
   &__scroll {
     overflow-y: auto;
     height: 100%;
@@ -99,23 +77,23 @@ export default {
   }
 
   &__list-item {
+    // max-height: 100px;
+
     &.show-enter-active,
     &.show-leave-active {
-      overflow: hidden;
-      max-height: 100px;
+      transition: all 0.2s;
     }
 
-    &.show-enter,
-    &.show-leave-to {
-      max-height: 0px;
-      transition: all 0.4s;
+    &.show-enter-active &-btn,
+    &.show-leave-active &-btn {
+      transition: all 0.2s;
     }
 
     &.show-enter &-btn,
     &.show-leave-to &-btn {
       transition: all 0.2s;
       opacity: 0;
-      transform: scale(0.9);
+      transform: scale(0.95);
     }
   }
 
@@ -151,7 +129,7 @@ export default {
 
     &_is-active {
       background-color: $color-primary;
-      box-shadow: 0 0 20px -5px $color-primary;
+      box-shadow: 0 0 15px -5px $color-primary;
     }
   }
 }

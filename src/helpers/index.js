@@ -20,6 +20,13 @@ export const scrollToRight = (element) => {
   });
 }
 
+export const scrollToElem = (scrollElem, toElem) => {
+  scrollElem.scrollTo({
+    top: toElem.offsetTop - (scrollElem.clientHeight - toElem.offsetHeight) / 2,
+    behavior: 'smooth'
+  });
+}
+
 export const getArrayWithoutDuplicates = (arr) => {
   return arr.filter((item, index) => arr.indexOf(item) === index);
 }

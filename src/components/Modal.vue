@@ -51,7 +51,6 @@ export default {
 
   &__dialog {
     min-width: 300px;
-    min-height: 300px;
     width: 100%;
     max-width: 400px;
   }

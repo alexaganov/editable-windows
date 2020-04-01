@@ -2,53 +2,57 @@
   <nav class="main-controls">
     <ul class="main-controls__list">
       <li class="main-controls__item">
-        <ControlButton
+        <Button
           class="main-controls__control"
           title="Save"
+          variant="icon"
           :disabled="isSaveBtnDisabled"
-          :handleClick="onSave"
+          @click="onSave"
         >
-          <SaveIcon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
-        </ControlButton>
+          <SaveIcon class="main-controls__control-icon" size="2.2x" stroke-width="1" />
+        </Button>
       </li>
       <li class="main-controls__item">
-        <ControlButton
+        <Button
           class="main-controls__control main-controls__control-undo"
           title="Undo"
+          variant="icon"
           :disabled="isUndoBtnDisabled"
-          :handleClick="onUndo"
+          @click="onUndo"
         >
-          <RotateCcwIcon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
-        </ControlButton>
+          <RotateCcwIcon class="main-controls__control-icon" size="2.2x" stroke-width="1" />
+        </Button>
       </li>
 
       <li class="main-controls__item">
-        <ControlButton
+        <Button
           class="main-controls__control main-controls__control-redo"
           title="Redo"
+          variant="icon"
           :disabled="isRedoBtnDisabled"
-          :handleClick="onRedo"
+          @click="onRedo"
         >
-          <RotateCwIcon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
-        </ControlButton>
+          <RotateCwIcon class="main-controls__control-icon" size="2.2x" stroke-width="1" />
+        </Button>
       </li>
 
       <li class="main-controls__item">
-        <ControlButton
+        <Button
           class="main-controls__control"
           title="Delete"
+          variant="icon"
           :disabled="isDeleteBtnDisabled"
-          :handleClick="onDelete"
+          @click="onDelete"
         >
-          <Trash2Icon class="main-controls__control-icon" size="2.5x" stroke-width="1" />
-        </ControlButton>
+          <Trash2Icon class="main-controls__control-icon" size="2.2x" stroke-width="1" />
+        </Button>
       </li>
     </ul>
   </nav>
 </template>
 
 <script>
-import ControlButton from "./ControlButton";
+import Button from "./Button";
 import { SAVE, UNDO, REDO, REMOVE_ACTIVE_WINDOW } from "../store/actions-types";
 import {
   RotateCcwIcon,
@@ -63,7 +67,8 @@ export default {
     RotateCwIcon,
     SaveIcon,
     Trash2Icon,
-    ControlButton
+    // ControlButton,
+    Button
   },
   computed: {
     isSaveBtnDisabled() {
@@ -111,6 +116,11 @@ export default {
     &:not(:last-child) {
       margin-right: 8px;
     }
+  }
+
+  &__control {
+    color: $color-primary;
+    filter: drop-shadow(0px 0px 10px $color-primary);
   }
 
   &__control-undo:not(:disabled):active {

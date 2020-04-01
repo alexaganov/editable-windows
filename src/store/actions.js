@@ -6,6 +6,8 @@ import {
   SET_WINDOW_POSITION,
   SET_WINDOW_POSITION_SIZE,
   SET_ACTIVE_WINDOW,
+  EDIT_WINDOW,
+  SET_WINDOW_CONTENT,
   
   UNDO,
   REDO,
@@ -71,6 +73,10 @@ const actions = {
         ] 
       });
     }
+  },
+
+  [EDIT_WINDOW]({ commit }, { id }) {
+    commit(mutations.SHOW_EDIT_MODAL, { id });
   },
 
   async [SET_WINDOW_POSITION]({ commit }, { window, x, y }) {
@@ -178,6 +184,22 @@ const actions = {
     commit(mutations.PUSH_UNDO, { undo });
   },
 
+  [SET_WINDOW_CONTENT]({ commit }, { window, content }) {
+    commit(mutations.PUSH_UNDO, { 
+      undo: { 
+        mutation: mutations.SET_WINDOW_CONTENT, 
+        payload: { 
+          type: UNDO,
+          id: window.id,
+          old: {...window.content},
+          new: {...content}
+        },
+      },
+    });
+    
+    commit(mutations.SET_WINDOW_CONTENT, { id: window.id, content });
+    commit(mutations.HIDE_EDIT_MODAL);
+  },
 
   [PROCESS_UNDO_OR_REDO]({ commit }, { undoOrRedo }) {
     return new Promise((resolve, reject) => {
@@ -256,6 +278,25 @@ const actions = {
 
               result.push({ 
                 mutation: mutations.SET_WINDOW_SIZE, 
+                payload: {
+                  ...payload,
+                  type: type === UNDO ? REDO : UNDO
+                }
+              })
+
+              break;
+            }
+
+            case mutations.SET_WINDOW_CONTENT: {
+              const { type, id, old: oldContent, new: newContent } = payload;
+
+              commit(mutations.SET_WINDOW_CONTENT, {
+                id, 
+                content: type === UNDO ? oldContent : newContent, 
+              });
+
+              result.push({ 
+                mutation: mutations.SET_WINDOW_CONTENT, 
                 payload: {
                   ...payload,
                   type: type === UNDO ? REDO : UNDO

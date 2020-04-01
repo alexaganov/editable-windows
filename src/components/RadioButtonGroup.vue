@@ -11,32 +11,7 @@
 
 <script>
 export default {
-  name: "RadioButtonGroup",
-  props: {
-    name: String
-  },
-  mounted() {
-    if (this.name) {
-      this.$children.forEach(child => {
-        if (child.$options.name === "RadioButton" && !child.initialName) {
-          child.name = this.name;
-
-          /*  child.$on("change", v => {
-            // child.isChecked = false;
-            child.selected = this.checked === v;
-
-            this.$emit("change", v);
-          }); */
-        }
-      });
-    }
-  },
-  updated() {
-    console.log("updated");
-  },
-  data() {
-    return {};
-  }
+  name: "RadioButtonGroup"
 };
 </script>
 

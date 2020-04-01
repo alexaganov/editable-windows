@@ -7,15 +7,25 @@ const state = {
   undos: [],
   redos: [],
 
-  windowsInitialX: 30,
-  windowsInitialY: 30,
-  windowsInitialWidth: 200,
-  windowsInitialHeight: 200,
-  windowsMinWidth: 100,
-  windowsMinHeight: 100,
-  windowsInitialContent: {
-    type: TEXT,
-    content: ''
+  initialWindow: {
+    x: 30,
+    y: 30, 
+    name: '',
+    width: 200, 
+    height: 200,
+    minWidth: 100,
+    minHeight: 100,
+    isActive: false,
+    isRemoved: false,
+    content:  {
+      type: TEXT,
+      data: ''
+    },
+  },
+  
+  editModal: {
+    isShown: false,
+    window: null
   }
 };
 

@@ -1,3 +1,3 @@
-export const TEXT   = 0;
-export const IMAGE  = 1;
-export const VIDEO  = 2;
+export const TEXT   = 'text';
+export const IMAGE  = 'image';
+export const VIDEO  = 'video';

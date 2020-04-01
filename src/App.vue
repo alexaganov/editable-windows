@@ -37,6 +37,7 @@ button {
   font-family: inherit;
 }
 
+video,
 img {
   width: 100%;
   max-width: 100%;

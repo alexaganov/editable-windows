@@ -24,27 +24,47 @@
     @end-dragging="onEndDragging"
     :title="name"
   >
-    <div class="editable-window__content">
-      <div class="editable-window__header">
-        <ControlButton title="Edit">
+    <div class="editable-window__main">
+      <div class="editable-window__controls">
+        <Button variant="icon" title="Edit" @click="onEdit">
           <EditIcon size="2x" stroke-width="1" />
-        </ControlButton>
+        </Button>
       </div>
-      <div class="editable-window__body">{{ this.content }}</div>
+      <div class="editable-window__content">
+        <p
+          class="editable-window__content-text"
+          v-if="content.type === contentTypes.TEXT"
+        >{{ content.data }}</p>
+        <img
+          class="editable-window__content-image"
+          v-else-if="content.type === contentTypes.IMAGE"
+          :src="content.data.src"
+          :alt="content.data.name"
+        />
+        <video
+          class="editable-window__content-video"
+          v-else-if="content.type === contentTypes.VIDEO"
+          :src="content.data.src"
+          ref="video"
+          muted
+          loop
+        ></video>
+      </div>
     </div>
   </Moveable>
 </template>
 
 <script>
 import Moveable from "./Moveable";
-import ControlButton from "./ControlButton";
+import Button from "./Button";
 import { EditIcon } from "vue-feather-icons";
+import { TEXT, IMAGE, VIDEO } from "../store/content-types";
 
 export default {
   name: "EditableWindow",
   components: {
     Moveable,
-    ControlButton,
+    Button,
     EditIcon
   },
   props: {
@@ -56,7 +76,7 @@ export default {
     name: String,
     id: Number,
     resizers: [Array, String],
-    content: String,
+    content: Object,
     walls: Boolean,
     minX: Number,
     maxX: Number,
@@ -67,6 +87,33 @@ export default {
     minHeight: Number,
     maxHeight: Number,
     isActive: Boolean
+  },
+  computed: {
+    hanldedContent() {
+      const { type, content } = this.content;
+
+      switch (type) {
+        case this.contentTypes.TEXT:
+          return content;
+
+        case this.contentTypes.IMAGE:
+          return <EditIcon />;
+
+        default:
+          return null;
+      }
+    }
+  },
+  updated() {
+    const { video } = this.$refs;
+
+    if (video) {
+      if (this.isActive) {
+        video.play();
+      } else {
+        video.pause();
+      }
+    }
   },
   mounted() {},
   methods: {
@@ -91,10 +138,18 @@ export default {
     onEndResizing(data) {
       this.isResizing = false;
       this.$emit("end-resizing", this.id, data);
+    },
+    onEdit() {
+      this.$emit("edit", this.id);
     }
   },
   data() {
     return {
+      contentTypes: {
+        TEXT,
+        IMAGE,
+        VIDEO
+      },
       isDragging: false,
       isResizing: false
     };
@@ -131,8 +186,8 @@ export default {
     // transition: width 0s, height 0s;
   }
 
-  &__header {
-    z-index: 100;
+  &__controls {
+    z-index: 20;
     position: absolute;
     top: 0;
     right: 0;
@@ -142,11 +197,11 @@ export default {
     transition: all 0.2s;
   }
 
-  &_is-active:hover &__header {
+  &_is-active:hover &__controls {
     opacity: 1;
   }
 
-  &__content {
+  &__main {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -154,9 +209,21 @@ export default {
     left: 0;
   }
 
-  &__body {
+  &__content {
     width: 100%;
     height: 100%;
+    overflow: hidden;
+  }
+
+  &__content-text {
+    padding: 15px;
+  }
+
+  &__content-image,
+  &__content-video {
+    height: 100%;
+    object-fit: cover;
+    user-select: none;
   }
 }
 </style>
